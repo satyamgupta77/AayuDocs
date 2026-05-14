@@ -113,7 +113,7 @@ export default async function CategoryPage(props: { params: Promise<{ category: 
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Categories</h3>
             <ul className="space-y-3">
-              {categories.map((cat, i) => (
+              {categories.map((cat: { name: string; count?: number }, i: number) => (
                 <li key={i}>
                   <Link 
                     href={`/blog/category/${cat.name.toLowerCase()}`}
