@@ -7,11 +7,13 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center space-x-2 mb-6 inline-flex">
-              <div className="bg-gradient-to-br from-violet-600 to-blue-500 text-white p-2 rounded-xl">
-                <FileText size={24} strokeWidth={2.5} />
-              </div>
-              <span className="text-2xl font-bold text-white">
+            <Link href="/" className="flex items-center space-x-3 mb-6 inline-flex">
+              <img 
+                src="/logo.png" 
+                alt="AayuDocs Logo" 
+                className="w-10 h-10 rounded-xl object-contain shadow-sm" 
+              />
+              <span className="text-2xl font-bold text-white tracking-tight">
                 AayuDocs
               </span>
             </Link>

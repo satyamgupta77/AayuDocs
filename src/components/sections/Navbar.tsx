@@ -31,11 +31,13 @@ export function Navbar() {
     >
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="bg-gradient-to-br from-violet-600 to-blue-500 text-white p-2 rounded-xl group-hover:scale-105 transition-transform">
-              <FileText size={24} strokeWidth={2.5} />
-            </div>
-            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-700 to-blue-600">
+          <Link href="/" className="flex items-center space-x-3 group">
+            <img 
+              src="/logo.png" 
+              alt="AayuDocs Logo" 
+              className="w-10 h-10 rounded-xl object-contain group-hover:scale-105 transition-transform shadow-sm" 
+            />
+            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-700 to-blue-600 tracking-tight">
               AayuDocs
             </span>
           </Link>
