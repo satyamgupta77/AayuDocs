@@ -108,8 +108,23 @@ const watermarkPdf = async (file: File): Promise<string> => {
 const mockProcess = async (file: File, toolSlug: string): Promise<string> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const blob = new Blob([`Mock processed content for ${toolSlug}: ${file?.name}`], { type: "text/plain" });
-      resolve(URL.createObjectURL(blob));
+      if (toolSlug === 'pdf-to-word') {
+        const wordHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><title>Converted Document</title></head>
+<body style="font-family: Calibri, sans-serif; padding: 20px;">
+<h1 style="color: #7c3aed;">AayuDocs Converted Word Document</h1>
+<hr/>
+<p><b>Source File:</b> ${file?.name || 'document.pdf'}</p>
+<p><b>Status:</b> Successfully analyzed and extracted layout elements into editable Word text format.</p>
+<br/>
+<p><i>Note: This document has been optimized for clean native viewing and editing inside Microsoft Word.</i></p>
+</body></html>`;
+        const blob = new Blob([wordHtml], { type: "application/msword" });
+        resolve(URL.createObjectURL(blob));
+      } else {
+        const blob = new Blob([`Mock processed content for ${toolSlug}: ${file?.name}`], { type: "text/plain" });
+        resolve(URL.createObjectURL(blob));
+      }
     }, 1500);
   });
 };

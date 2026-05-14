@@ -44,16 +44,16 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#tools" className="text-sm font-medium text-slate-600 hover:text-violet-600 transition-colors">
+            <Link href="/#tools" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
               Tools
             </Link>
-            <Link href="#features" className="text-sm font-medium text-slate-600 hover:text-violet-600 transition-colors">
+            <Link href="/#features" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
               Features
             </Link>
-            <Link href="#pricing" className="text-sm font-medium text-slate-600 hover:text-violet-600 transition-colors">
+            <Link href="/pricing" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
               Pricing
             </Link>
-            <Link href="#faq" className="text-sm font-medium text-slate-600 hover:text-violet-600 transition-colors">
+            <Link href="/#faq" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
               FAQ
             </Link>
           </nav>
@@ -104,16 +104,19 @@ export function Navbar() {
           exit={{ opacity: 0, y: -20 }}
           className="md:hidden absolute top-full left-0 right-0 bg-white border-b shadow-lg py-4 px-4 flex flex-col space-y-4"
         >
-          <Link href="#tools" className="text-base font-medium text-slate-700 p-2 hover:bg-slate-50 rounded-lg">
+          <Link href="/#tools" onClick={() => setMobileMenuOpen(false)} className="text-base font-medium text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
             Tools
           </Link>
-          <Link href="#features" className="text-base font-medium text-slate-700 p-2 hover:bg-slate-50 rounded-lg">
+          <Link href="/#features" onClick={() => setMobileMenuOpen(false)} className="text-base font-medium text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
             Features
           </Link>
-          <Link href="#pricing" className="text-base font-medium text-slate-700 p-2 hover:bg-slate-50 rounded-lg">
+          <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="text-base font-medium text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
             Pricing
           </Link>
-          <div className="pt-4 flex flex-col space-y-2 border-t border-slate-100">
+          <Link href="/#faq" onClick={() => setMobileMenuOpen(false)} className="text-base font-medium text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+            FAQ
+          </Link>
+          <div className="pt-4 flex flex-col space-y-2 border-t border-slate-100 dark:border-slate-800">
             {!isSignedIn ? (
               <>
                 <SignInButton mode="modal">

@@ -348,10 +348,11 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
                   href={processedUrl} 
                   download={`processed_${activeFiles[0]?.name?.split('.')[0] || 'file'}${
                     (tool.slug === 'ocr' || tool.isAi) ? '.txt' :
+                    tool.slug === 'pdf-to-word' ? '.doc' :
                     tool.slug.includes('-to-jpg') || tool.slug === 'heic-converter' ? '.jpg' :
                     tool.slug.includes('-to-png') ? '.png' :
                     tool.slug.includes('webp-converter') ? '.webp' :
-                    tool.category === 'Image' ? '' : // keep original extension or default to .jpg if complex
+                    tool.category === 'Image' ? '' :
                     '.pdf'
                   }`}
                   className="flex-1 h-14 text-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 dark:shadow-none inline-flex items-center justify-center rounded-lg font-medium"

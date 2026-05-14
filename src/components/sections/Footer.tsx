@@ -39,32 +39,43 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-6">Popular Tools</h4>
             <ul className="space-y-4">
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Word to PDF</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">PDF to Word</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Merge PDF</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Split PDF</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Compress PDF</Link></li>
+              <li><Link href="/tools/word-to-pdf" className="hover:text-violet-400 transition-colors">Word to PDF</Link></li>
+              <li><Link href="/tools/pdf-to-word" className="hover:text-violet-400 transition-colors">PDF to Word</Link></li>
+              <li><Link href="/tools/merge-pdf" className="hover:text-violet-400 transition-colors">Merge PDF</Link></li>
+              <li><Link href="/tools/split-pdf" className="hover:text-violet-400 transition-colors">Split PDF</Link></li>
+              <li><Link href="/tools/compress-pdf" className="hover:text-violet-400 transition-colors">Compress PDF</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white font-semibold mb-6">Resources</h4>
-            <ul className="space-y-4">
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Help Center</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">API Documentation</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Blog</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Pricing</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Contact Support</Link></li>
-            </ul>
+            <h4 className="text-white font-semibold mb-6">Direct Support</h4>
+            <div className="space-y-3 text-sm">
+              <p className="text-slate-400">Need instant activation or custom queries?</p>
+              <p className="flex items-center text-slate-300">
+                <span className="font-semibold text-violet-400 mr-2">Email:</span>
+                <a href="mailto:forsatyam2018@gmail.com" className="text-white hover:underline font-bold bg-violet-950/50 px-2 py-1 rounded border border-violet-800">
+                  forsatyam2018@gmail.com
+                </a>
+              </p>
+              <p className="flex items-center text-slate-300">
+                <span className="font-semibold text-emerald-400 mr-2">WhatsApp:</span>
+                <a href="https://wa.me/917705879297" target="_blank" rel="noopener noreferrer" className="text-white hover:underline font-bold">
+                  +91 7705879297
+                </a>
+              </p>
+              <p className="text-xs text-amber-400/90 leading-tight mt-2 bg-amber-950/30 p-2 rounded border border-amber-900/50">
+                ⚠️ Purchased a subscription but plan not updated? Message us on WhatsApp or Email directly with payment screenshot!
+              </p>
+            </div>
           </div>
 
           <div>
             <h4 className="text-white font-semibold mb-6">Company</h4>
-            <ul className="space-y-4">
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">About Us</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Careers</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Privacy Policy</Link></li>
-              <li><Link href="#" className="hover:text-violet-400 transition-colors">Terms of Service</Link></li>
+            <ul className="space-y-4 text-sm">
+              <li><Link href="/pricing" className="hover:text-violet-400 transition-colors">Pricing & Plans</Link></li>
+              <li><Link href="/blog" className="hover:text-violet-400 transition-colors">Insights & Blog</Link></li>
+              <li><Link href="/#faq" className="hover:text-violet-400 transition-colors">Help & FAQ</Link></li>
+              <li><a href="https://wa.me/917705879297" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">Chat Support</a></li>
             </ul>
           </div>
         </div>
