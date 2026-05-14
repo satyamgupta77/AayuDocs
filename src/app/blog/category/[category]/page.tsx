@@ -24,7 +24,7 @@ export default async function CategoryPage(props: { params: Promise<{ category: 
   const page = parseInt(searchParams.page || "1");
 
   const { posts, totalPages } = await getPublishedPosts(undefined, categoryName, page, 9);
-  const categories = await getCategories();
+  const categories: Array<{ name: string; count?: number }> = await getCategories();
 
   return (
     <div className="container mx-auto px-4 py-16 md:py-24 max-w-7xl">
