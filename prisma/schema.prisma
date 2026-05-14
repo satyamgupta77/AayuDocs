@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String         @id @default(cuid())
+  clerkId        String         @unique
+  email          String         @unique
+  firstName      String?
+  lastName       String?
+  imageUrl       String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  files          File[]
+  conversions    Conversion[]
+  subscription   Subscription?
+  blogs          Blog[]
+  toolUsages     ToolUsage[]
+}
+
+model File {
+  id           String       @id @default(cuid())
+  userId       String
+  name         String
+  size         Int
+  mimeType     String
+  url          String
+  createdAt    DateTime     @default(now())
+  
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversions  Conversion[]
+}
+
+model Conversion {
+  id           String   @id @default(cuid())
+  userId       String
+  fileId       String?
+  toolUsed     String
+  status       String   @default("COMPLETED") // PENDING, COMPLETED, FAILED
+  errorMessage String?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  file         File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
+}
+
+model Subscription {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  plan                   String   @default("FREE") // FREE, PRO_MONTHLY, PRO_YEARLY
+  status                 String   @default("ACTIVE") // ACTIVE, CANCELED, PAST_DUE
+  razorpayCustomerId     String?  @unique
+  razorpaySubscriptionId String?  @unique
+  currentPeriodEnd       DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Blog {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String   @db.Text
+  excerpt   String?  @db.Text
+  imageUrl  String?
+  category  String   @default("General")
+  tags      String[]
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model ToolUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  toolSlug  String
+  count     Int      @default(1)
+  lastUsed  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, toolSlug])
+}
