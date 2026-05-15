@@ -30,7 +30,7 @@ export function generateStaticParams() {
   }));
 }
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/db";
 
 export default async function ToolPage(props: Props) {
@@ -42,15 +42,23 @@ export default async function ToolPage(props: Props) {
   }
 
   const { userId } = await auth();
+  const user = await currentUser();
+  const email = user?.emailAddresses[0]?.emailAddress;
+  
   let isPro = false;
 
   if (userId) {
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      include: { subscription: true }
-    });
-    if (dbUser?.subscription?.status === "ACTIVE" && dbUser.subscription.plan.startsWith("PRO")) {
+    // Special access for forsatyam2018@gmail.com
+    if (email === "forsatyam2018@gmail.com") {
       isPro = true;
+    } else {
+      const dbUser = await prisma.user.findUnique({
+        where: { clerkId: userId },
+        include: { subscription: true }
+      });
+      if (dbUser?.subscription?.status === "ACTIVE" && dbUser.subscription?.plan.startsWith("PRO")) {
+        isPro = true;
+      }
     }
   }
 

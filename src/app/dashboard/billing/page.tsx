@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,16 @@ export default async function BillingDashboard() {
     redirect("/sign-in");
   }
 
+  const user = await currentUser();
+  const email = user?.emailAddresses[0]?.emailAddress;
+
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: userId },
     include: { subscription: true }
   });
 
   const subscription = dbUser?.subscription;
-  const isPro = subscription?.status === "ACTIVE" && subscription.plan.startsWith("PRO");
+  const isPro = (subscription?.status === "ACTIVE" && subscription?.plan?.startsWith("PRO")) || email === "forsatyam2018@gmail.com";
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -57,20 +60,22 @@ export default async function BillingDashboard() {
                     <div>
                       <p className="text-sm text-slate-500">Plan Type</p>
                       <p className="font-medium text-slate-900 dark:text-white">
-                        {subscription.plan === 'PRO_YEARLY' ? 'AayuDocs Pro (Yearly)' : 'AayuDocs Pro (Monthly)'}
+                        {subscription?.plan === 'PRO_YEARLY' ? 'AayuDocs Pro (Yearly)' : 'AayuDocs Pro (Lifetime Access)'}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">Next Billing Date</p>
                       <p className="font-medium text-slate-900 dark:text-white">
-                        {subscription.currentPeriodEnd ? format(new Date(subscription.currentPeriodEnd), 'MMMM d, yyyy') : '-'}
+                        {subscription?.currentPeriodEnd ? format(new Date(subscription.currentPeriodEnd), 'MMMM d, yyyy') : 'Never'}
                       </p>
                     </div>
                   </div>
                   <div className="pt-4 flex gap-3">
-                    <Button variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900/50 dark:hover:bg-rose-900/20">
-                      Cancel Subscription
-                    </Button>
+                    {subscription && (
+                      <Button variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900/50 dark:hover:bg-rose-900/20">
+                        Cancel Subscription
+                      </Button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -125,7 +130,7 @@ export default async function BillingDashboard() {
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="flex justify-between items-center text-sm border-b border-slate-100 dark:border-slate-800 pb-3 last:border-0 last:pb-0">
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-white">Pro Plan {subscription.plan === 'PRO_YEARLY' ? '(Yearly)' : '(Monthly)'}</p>
+                        <p className="font-medium text-slate-900 dark:text-white">Pro Plan {subscription?.plan === 'PRO_YEARLY' ? '(Yearly)' : '(Special)'}</p>
                         <p className="text-xs text-slate-500 flex items-center mt-0.5">
                           <Clock size={10} className="mr-1" />
                           {format(new Date(new Date().setMonth(new Date().getMonth() - i + 1)), 'MMM d, yyyy')}
@@ -133,7 +138,7 @@ export default async function BillingDashboard() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-slate-900 dark:text-white">
-                          ₹{subscription.plan === 'PRO_YEARLY' ? '3999' : '399'}
+                          ₹{subscription?.plan === 'PRO_YEARLY' ? '3999' : '0'}
                         </p>
                         <a href="#" className="text-xs text-violet-600 hover:underline">Invoice</a>
                       </div>

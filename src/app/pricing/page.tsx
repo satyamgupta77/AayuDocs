@@ -3,14 +3,17 @@
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
 export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);
   const [loading, setLoading] = useState(false);
   const { isSignedIn } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
+
+  const isSpecialUser = user?.emailAddresses[0]?.emailAddress === "forsatyam2018@gmail.com";
 
   const handleSubscribe = async (planId: string) => {
     if (!isSignedIn) {
@@ -149,9 +152,9 @@ export default function PricingPage() {
             <Button 
               className="w-full h-12 rounded-xl text-lg font-semibold bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white border-0"
               onClick={() => handleSubscribe(isYearly ? process.env.NEXT_PUBLIC_RAZORPAY_YEARLY_PLAN_ID! : process.env.NEXT_PUBLIC_RAZORPAY_MONTHLY_PLAN_ID!)}
-              disabled={loading}
+              disabled={loading || isSpecialUser}
             >
-              {loading ? "Initializing..." : "Upgrade to Pro"}
+              {loading ? "Initializing..." : isSpecialUser ? "Active" : "Upgrade to Pro"}
             </Button>
           </div>
         </div>
