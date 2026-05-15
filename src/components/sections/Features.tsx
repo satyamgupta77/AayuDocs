@@ -38,7 +38,7 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="py-20 md:py-32 bg-white dark:bg-slate-950 relative overflow-hidden">
+    <section id="features" className="py-20 md:py-32 bg-background dark:bg-slate-950 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-violet-50/50 dark:bg-violet-900/10 blur-3xl"></div>
       <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-blue-50/50 dark:bg-blue-900/10 blur-3xl"></div>
@@ -72,7 +72,7 @@ export function Features() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl dark:hover:shadow-none hover:-translate-y-1 transition-all duration-300"
+              className="bg-card dark:bg-slate-900 rounded-2xl p-8 border border-border dark:border-slate-800 shadow-sm hover:shadow-xl dark:hover:shadow-none hover:-translate-y-1 transition-all duration-300"
             >
               <div className="h-12 w-12 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-6">
                 {feature.icon}

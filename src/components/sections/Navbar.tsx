@@ -6,12 +6,14 @@ import { useState, useEffect } from "react";
 import { Menu, X, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, UserButton, useAuth, useUser } from "@clerk/nextjs";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const isAdmin = user?.emailAddresses[0]?.emailAddress === "forsatyam2018@gmail.com";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,6 +77,13 @@ export function Navbar() {
               </>
             ) : (
               <>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button variant="ghost" className="text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 mr-2 font-bold">
+                      Admin
+                    </Button>
+                  </Link>
+                )}
                 <Link href="/dashboard">
                   <Button variant="ghost" className="text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 mr-2">
                     Dashboard

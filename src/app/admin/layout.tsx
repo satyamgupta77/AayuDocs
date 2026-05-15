@@ -10,8 +10,18 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = await currentUser();
+  const email = user?.emailAddresses[0]?.emailAddress;
+
+  // Allow access for specific admin email or handle as needed
   if (!user) {
-    redirect("/");
+    redirect("/sign-in?redirect_url=/admin");
+  }
+
+  // Optional: Restrict to only the admin email
+  if (email !== "forsatyam2018@gmail.com") {
+    // For now we allow other logged in users to see it for development, 
+    // but you can uncomment the next line to restrict it.
+    // redirect("/");
   }
 
   return (

@@ -29,7 +29,7 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="py-20 md:py-32 bg-white dark:bg-slate-950">
+    <section className="py-20 md:py-32 bg-background dark:bg-slate-950">
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <motion.h2 
@@ -59,7 +59,7 @@ export function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 hover:shadow-xl dark:hover:shadow-none hover:border-violet-100 dark:hover:border-violet-900 transition-all duration-300"
+              className="bg-card dark:bg-slate-900/50 rounded-3xl p-8 border border-border dark:border-slate-800 hover:shadow-xl dark:hover:shadow-none hover:border-violet-100 dark:hover:border-violet-900 transition-all duration-300"
             >
               <div className="flex text-amber-400 mb-6">
                 {[...Array(testimonial.rating)].map((_, i) => (

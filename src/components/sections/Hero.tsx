@@ -19,7 +19,7 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center rounded-full border border-violet-200 dark:border-violet-900/50 bg-white/50 dark:bg-violet-900/20 px-3 py-1 text-sm text-violet-600 dark:text-violet-400 mb-6 backdrop-blur-sm shadow-sm">
+            <div className="inline-flex items-center rounded-full border border-violet-200 dark:border-violet-800 bg-white/50 dark:bg-violet-900/30 px-3 py-1 text-sm text-violet-600 dark:text-violet-400 mb-6 backdrop-blur-sm shadow-sm">
               <Sparkles className="mr-2 h-4 w-4" />
               <span>The all-in-one document workspace</span>
             </div>
@@ -53,7 +53,7 @@ export function Hero() {
             className="relative max-w-3xl mx-auto"
           >
             {/* Upload Dropzone */}
-            <div className="group relative rounded-3xl border-2 border-dashed border-violet-200 dark:border-violet-900/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl p-12 transition-all hover:border-violet-400 hover:bg-violet-50/50 dark:hover:bg-slate-800/50 shadow-xl shadow-violet-100/50 dark:shadow-none">
+            <div className="group relative rounded-3xl border-2 border-dashed border-violet-200 dark:border-violet-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-12 transition-all hover:border-violet-400 dark:hover:border-violet-600 hover:bg-violet-50/50 dark:hover:bg-slate-800/50 shadow-xl shadow-violet-100/50 dark:shadow-none">
               <div className="flex flex-col items-center justify-center space-y-6">
                 <div className="h-20 w-20 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-violet-600 group-hover:text-white transition-all duration-300 shadow-sm">
                   <FileUp size={40} strokeWidth={1.5} />

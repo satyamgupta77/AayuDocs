@@ -69,7 +69,7 @@ export function ToolGrid() {
                   className={`group h-full relative rounded-2xl p-6 border shadow-sm transition-all duration-500 flex flex-col items-center text-center hover:-translate-y-1 overflow-hidden ${
                     tool.isAi 
                       ? 'bg-slate-900 border-violet-500/30 hover:border-violet-500 hover:shadow-[0_0_30px_-5px_rgba(139,92,246,0.3)]' 
-                      : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:shadow-xl hover:border-violet-100 dark:hover:border-violet-900'
+                      : 'bg-card dark:bg-slate-900 border-border dark:border-slate-800 hover:shadow-xl hover:border-violet-100 dark:hover:border-violet-900'
                   }`}
                 >
                   {/* Glowing AI background effect */}
