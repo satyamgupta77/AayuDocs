@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { siteConfig } from "@/config/site";
 import { ClerkProvider } from '@clerk/nextjs';
+import { Analytics } from '@vercel/analytics/next';
 
 const outfit = Outfit({ 
   subsets: ["latin"],
@@ -90,6 +91,7 @@ export default async function RootLayout({
             {!isAdmin && <Footer />}
           </ThemeProvider>
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
