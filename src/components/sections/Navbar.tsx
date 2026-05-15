@@ -25,7 +25,7 @@ export function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-white/80 backdrop-blur-md border-b shadow-sm py-3"
+          ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b dark:border-slate-800 shadow-sm py-3"
           : "bg-transparent py-5"
       }`}
     >
@@ -87,7 +87,7 @@ export function Navbar() {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="md:hidden text-slate-600"
+            className="md:hidden text-slate-600 dark:text-slate-300"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
@@ -102,7 +102,7 @@ export function Navbar() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="md:hidden absolute top-full left-0 right-0 bg-white border-b shadow-lg py-4 px-4 flex flex-col space-y-4"
+          className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-900 border-b dark:border-slate-800 shadow-lg py-4 px-4 flex flex-col space-y-4"
         >
           <Link href="/#tools" onClick={() => setMobileMenuOpen(false)} className="text-base font-medium text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
             Tools

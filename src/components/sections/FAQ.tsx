@@ -33,14 +33,14 @@ const faqs = [
 
 export function FAQ() {
   return (
-    <section id="faq" className="py-20 md:py-32 bg-slate-50">
+    <section id="faq" className="py-20 md:py-32 bg-slate-50 dark:bg-slate-950/50">
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-5xl font-bold text-slate-900 mb-6"
+            className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6"
           >
             Frequently Asked Questions
           </motion.h2>
@@ -49,7 +49,7 @@ export function FAQ() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-slate-600"
+            className="text-lg text-slate-600 dark:text-slate-400"
           >
             Everything you need to know about the product and billing.
           </motion.p>
@@ -60,15 +60,15 @@ export function FAQ() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="max-w-3xl mx-auto bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100"
+          className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 dark:border-slate-800"
         >
           <Accordion className="w-full">
             {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="border-b-slate-100 py-2">
-                <AccordionTrigger className="text-left text-lg font-semibold text-slate-900 hover:text-violet-600 hover:no-underline data-[state=open]:text-violet-600">
+              <AccordionItem key={index} value={`item-${index}`} className="border-b-slate-100 dark:border-b-slate-800 py-2">
+                <AccordionTrigger className="text-left text-lg font-semibold text-slate-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 hover:no-underline data-[state=open]:text-violet-600 dark:data-[state=open]:text-violet-400">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-slate-600 text-base leading-relaxed">
+                <AccordionContent className="text-slate-600 dark:text-slate-400 text-base leading-relaxed">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
