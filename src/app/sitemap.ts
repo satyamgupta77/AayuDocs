@@ -10,14 +10,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  const routes = [
+  const staticRoutes = [
     {
       url: siteConfig.url,
       lastModified: new Date().toISOString().split('T')[0],
       changeFrequency: 'daily' as const,
       priority: 1,
     },
+    {
+      url: `${siteConfig.url}/pricing`,
+      lastModified: new Date().toISOString().split('T')[0],
+      changeFrequency: 'monthly' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${siteConfig.url}/blog`,
+      lastModified: new Date().toISOString().split('T')[0],
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
   ];
 
-  return [...routes, ...toolsRoutes];
+  return [...staticRoutes, ...toolsRoutes];
 }

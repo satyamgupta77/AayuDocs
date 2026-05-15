@@ -17,9 +17,23 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     };
   }
 
+  const title = `${tool.title} | AayuDocs`;
+  const description = `${tool.description} Fast, secure, and free online tool.`;
+
   return {
     title: tool.title,
-    description: tool.description,
+    description: description,
+    openGraph: {
+      title: title,
+      description: description,
+      type: "article",
+      url: `/tools/${tool.slug}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: title,
+      description: description,
+    },
   };
 }
 

@@ -11,6 +11,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
     default: siteConfig.name,
     template: `%s | ${siteConfig.name}`,
@@ -18,10 +19,22 @@ export const metadata: Metadata = {
   description: siteConfig.description,
   keywords: [
     "PDF tools",
-    "convert PDF",
-    "merge PDF",
-    "compress image",
-    "document workspace",
+    "convert PDF to Word",
+    "Word to PDF",
+    "merge PDF files",
+    "compress PDF",
+    "split PDF",
+    "OCR PDF",
+    "AI document editor",
+    "AayuDocs",
+    "free PDF converter",
+    "secure document processing",
+    "online PDF editor",
+    "rotate PDF",
+    "watermark PDF",
+    "image to PDF",
+    "unlock PDF",
+    "protect PDF",
   ],
   authors: [
     {
@@ -30,6 +43,10 @@ export const metadata: Metadata = {
     },
   ],
   creator: "AayuDocs",
+  publisher: "AayuDocs",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -39,7 +56,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     images: [
       {
-        url: siteConfig.ogImage,
+        url: "/og.png",
         width: 1200,
         height: 630,
         alt: siteConfig.name,
@@ -50,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
-    images: [siteConfig.ogImage],
+    images: ["/og.png"],
     creator: "@aayudocs",
   },
   icons: {
@@ -58,11 +75,23 @@ export const metadata: Metadata = {
     shortcut: "/favicon-16x16.png",
     apple: "/apple-touch-icon.png",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 import { headers } from "next/headers";
 import { Navbar } from "@/components/sections/Navbar";
 import { Footer } from "@/components/sections/Footer";
+import { Analytics } from "@vercel/analytics/next";
 
 export default async function RootLayout({
   children,
@@ -88,6 +117,7 @@ export default async function RootLayout({
               {children}
             </main>
             {!isAdmin && <Footer />}
+            <Analytics />
           </ThemeProvider>
         </ClerkProvider>
       </body>
