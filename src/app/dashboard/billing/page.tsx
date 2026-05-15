@@ -1,6 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
+import { checkProStatus } from "@/lib/auth-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle, AlertCircle, CreditCard, Clock } from "lucide-react";
@@ -22,7 +23,7 @@ export default async function BillingDashboard() {
   });
 
   const subscription = dbUser?.subscription;
-  const isPro = (subscription?.status === "ACTIVE" && subscription?.plan?.startsWith("PRO")) || email === "forsatyam2018@gmail.com";
+  const isPro = await checkProStatus(email, userId, user?.username);
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -60,7 +61,7 @@ export default async function BillingDashboard() {
                     <div>
                       <p className="text-sm text-slate-500">Plan Type</p>
                       <p className="font-medium text-slate-900 dark:text-white">
-                        {subscription?.plan === 'PRO_YEARLY' ? 'AayuDocs Pro (Yearly)' : 'AayuDocs Pro (Lifetime Access)'}
+                        {subscription?.plan === 'PRO_YEARLY' ? 'AayuDocs Pro (Yearly)' : (subscription?.plan || 'VIP Pro Access')}
                       </p>
                     </div>
                     <div>

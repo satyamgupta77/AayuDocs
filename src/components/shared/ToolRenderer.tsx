@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Upload, FileUp, Settings, Download, File, X, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ToolConfig, toolsConfig } from "@/config/tools";
 import { useAppStore } from "@/hooks/useAppStore";
 import { useForm } from "react-hook-form";
@@ -46,6 +47,9 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
   const Icon = tool.icon;
 
   const [ocrLang, setOcrLang] = useState("eng");
+  const [imageFilter, setImageFilter] = useState("grayscale");
+  const [maxSize, setMaxSize] = useState(1);
+  const [maxDim, setMaxDim] = useState(1920);
   const [copied, setCopied] = useState(false);
 
   const isMultiFile = tool.slug === "merge-pdf" || tool.slug === "image-to-pdf";
@@ -93,7 +97,11 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
         const blob = new Blob([text], { type: "text/plain" });
         url = URL.createObjectURL(blob);
       } else if (tool.category === "Image") {
-        url = await processImageTool(activeFiles, tool.slug);
+        url = await processImageTool(activeFiles, tool.slug, { 
+          filter: imageFilter,
+          maxSizeMB: maxSize,
+          maxWidthOrHeight: maxDim
+        });
       } else if (tool.slug === "image-to-pdf") {
         url = await processImageTool(activeFiles, tool.slug);
       } else {
@@ -287,6 +295,49 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
                       <option value="jpn">Japanese</option>
                       <option value="chi_sim">Chinese (Simplified)</option>
                     </select>
+                  </div>
+                )}
+                
+                {tool.slug === 'image-color-change' && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Select Filter</label>
+                    <select 
+                      value={imageFilter} 
+                      onChange={(e) => setImageFilter(e.target.value)}
+                      className="w-full md:w-1/2 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500"
+                    >
+                      <option value="grayscale">Grayscale</option>
+                      <option value="sepia">Sepia</option>
+                      <option value="invert">Invert</option>
+                      <option value="boost">Color Boost</option>
+                    </select>
+                  </div>
+                )}
+                
+                {tool.slug === 'compress-image' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Target Max Size (MB)</label>
+                      <Input 
+                        type="number" 
+                        step="0.1"
+                        min="0.1"
+                        value={maxSize} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMaxSize(Number(e.target.value))}
+                        className="bg-white dark:bg-slate-800"
+                      />
+                      <p className="text-[10px] text-slate-500 italic">e.g. 0.5 for 500KB</p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Max Dimension (Pixels)</label>
+                      <Input 
+                        type="number" 
+                        value={maxDim} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMaxDim(Number(e.target.value))}
+                        className="bg-white dark:bg-slate-800"
+                      />
+                      <p className="text-[10px] text-slate-500 italic">Longest side (width or height)</p>
+                    </div>
                   </div>
                 )}
 

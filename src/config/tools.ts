@@ -275,6 +275,15 @@ export const toolsConfig: ToolConfig[] = [
     category: "AI",
     isAi: true,
   },
+  {
+    id: "image-color-change",
+    slug: "image-color-change",
+    title: "Image Color Change",
+    description: "Adjust colors, brightness, and apply filters to your images instantly.",
+    icon: ImageIcon,
+    color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
+    category: "Image",
+  },
 ];
 
 export function getToolBySlug(slug: string) {

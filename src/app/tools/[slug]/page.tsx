@@ -46,6 +46,7 @@ export function generateStaticParams() {
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/db";
+import { checkProStatus } from "@/lib/auth-utils";
 
 export default async function ToolPage(props: Props) {
   const params = await props.params;
@@ -59,22 +60,7 @@ export default async function ToolPage(props: Props) {
   const user = await currentUser();
   const email = user?.emailAddresses[0]?.emailAddress;
   
-  let isPro = false;
-
-  if (userId) {
-    // Special access for forsatyam2018@gmail.com
-    if (email === "forsatyam2018@gmail.com") {
-      isPro = true;
-    } else {
-      const dbUser = await prisma.user.findUnique({
-        where: { clerkId: userId },
-        include: { subscription: true }
-      });
-      if (dbUser?.subscription?.status === "ACTIVE" && dbUser.subscription?.plan.startsWith("PRO")) {
-        isPro = true;
-      }
-    }
-  }
+  const isPro = await checkProStatus(email, userId, user?.username);
 
   return <ToolRenderer toolSlug={tool.slug} isPro={isPro} />;
 }

@@ -11,33 +11,34 @@ export default async function AdminLayout({
 }) {
   const user = await currentUser();
   const email = user?.emailAddresses[0]?.emailAddress;
+  const username = user?.username;
 
   // Allow access for specific admin email or handle as needed
   if (!user) {
     redirect("/sign-in?redirect_url=/admin");
   }
 
-  // Optional: Restrict to only the admin email
-  if (email !== "forsatyam2018@gmail.com") {
-    // For now we allow other logged in users to see it for development, 
-    // but you can uncomment the next line to restrict it.
-    // redirect("/");
+  // Restrict to only the admin email or username
+  if (email !== "forsatyam2018@gmail.com" && username !== "satyam7705") {
+    redirect("/");
   }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row">
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 md:h-screen z-10 shadow-sm">
-        <div className="p-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
-          <Link href="/admin" className="flex items-center space-x-2">
-            <div className="bg-gradient-to-br from-violet-600 to-blue-500 text-white p-2 rounded-xl">
-              <FileText size={20} strokeWidth={2.5} />
-            </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-700 to-blue-600">
-              AayuAdmin
+        <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+          <Link href="/admin" className="flex items-center space-x-3 group min-w-0">
+            <img 
+              src="/logo.png" 
+              alt="AayuDocs" 
+              className="w-10 h-10 rounded-lg object-contain shrink-0" 
+            />
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-700 to-blue-600 truncate">
+              Admin
             </span>
           </Link>
-          <div className="md:hidden">
+          <div className="md:hidden flex-shrink-0">
             <UserButton />
           </div>
         </div>

@@ -13,7 +13,6 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isSignedIn } = useAuth();
   const { user } = useUser();
-  const isAdmin = user?.emailAddresses[0]?.emailAddress === "forsatyam2018@gmail.com";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -76,21 +75,7 @@ export function Navbar() {
                 </SignUpButton>
               </>
             ) : (
-              <>
-                {isAdmin && (
-                  <Link href="/admin">
-                    <Button variant="ghost" className="text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 mr-2 font-bold">
-                      Admin
-                    </Button>
-                  </Link>
-                )}
-                <Link href="/dashboard">
-                  <Button variant="ghost" className="text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 mr-2">
-                    Dashboard
-                  </Button>
-                </Link>
-                <UserButton appearance={{ elements: { avatarBox: "h-10 w-10" } }} />
-              </>
+              <UserButton appearance={{ elements: { avatarBox: "h-10 w-10" } }} />
             )}
           </div>
 
@@ -140,11 +125,9 @@ export function Navbar() {
                 </SignUpButton>
               </>
             ) : (
-              <Link href="/dashboard" className="w-full">
-                <Button variant="outline" className="w-full justify-center">
-                  Dashboard
-                </Button>
-              </Link>
+              <div className="flex justify-center">
+                <UserButton appearance={{ elements: { avatarBox: "h-12 w-12" } }} />
+              </div>
             )}
           </div>
         </motion.div>

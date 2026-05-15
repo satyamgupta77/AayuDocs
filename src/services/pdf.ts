@@ -1,8 +1,4 @@
 import { PDFDocument, rgb, degrees } from 'pdf-lib';
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Set worker source for pdfjs-dist
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 export const processPdfTool = async (files: File[], toolSlug: string): Promise<string> => {
   if (files.length === 0) throw new Error("No files provided");
@@ -19,10 +15,12 @@ export const processPdfTool = async (files: File[], toolSlug: string): Promise<s
     case 'watermark-pdf':
       return await watermarkPdf(files[0]);
     case 'word-to-pdf':
+      return await wordToPdf(files[0]);
     case 'pdf-to-word':
       return await pdfToWord(files[0]);
-    case 'unlock-pdf':
     case 'protect-pdf':
+      return await protectPdf(files[0]);
+    case 'unlock-pdf':
     case 'ocr':
       // For tools not fully supported client-side without external APIs, we return a mock file.
       return mockProcess(files[0], toolSlug);
@@ -30,6 +28,65 @@ export const processPdfTool = async (files: File[], toolSlug: string): Promise<s
       // Utility and Image tools return mock files for now
       return mockProcess(files[0], toolSlug);
   }
+};
+
+const protectPdf = async (file: File): Promise<string> => {
+  // pdf-lib does not support native encryption. 
+  // Real PDF protection requires a server-side engine or specialized library.
+  return mockProcess(file, 'protect-pdf');
+};
+
+const wordToPdf = async (file: File): Promise<string> => {
+  // In a real browser env, we'd use a more complex parser for .docx
+  // For now, we read as text/html and convert to PDF
+  const text = await file.text();
+  const element = document.createElement('div');
+  element.innerHTML = `
+    <div style="padding: 40px; font-family: sans-serif;">
+      <h1 style="color: #7c3aed;">AayuDocs Converted PDF</h1>
+      <hr/>
+      <div style="margin-top: 20px; line-height: 1.6;">
+        ${text.replace(/\n/g, '<br/>')}
+      </div>
+    </div>
+  `;
+  
+  const html2pdf = (await import('html2pdf.js')).default;
+  const pdfBlob = await html2pdf().from(element).output('blob');
+  return URL.createObjectURL(pdfBlob);
+};
+
+const pdfToWord = async (file: File): Promise<string> => {
+  // Demo: Extract text and wrap in HTML for Word
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfjs = await import('pdfjs-dist');
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+  
+  const loadingTask = pdfjs.getDocument(arrayBuffer);
+  const pdf = await loadingTask.promise;
+  let fullText = "";
+  
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const strings = content.items.map((item: any) => item.str);
+    fullText += strings.join(' ') + "\n\n";
+  }
+
+  const htmlContent = `
+    <html>
+      <body>
+        <h1 style="color: #7c3aed;">AayuDocs Extracted Content</h1>
+        <p><b>Source:</b> ${file.name}</p>
+        <hr/>
+        <div style="white-space: pre-wrap;">${fullText}</div>
+      </body>
+    </html>
+  `;
+  
+  const asBlob = (await import('html-docx-js-typescript')).asBlob;
+  const wordBlob = await asBlob(htmlContent);
+  return URL.createObjectURL(wordBlob as Blob);
 };
 
 const mergePdfs = async (files: File[]): Promise<string> => {
@@ -108,50 +165,6 @@ const watermarkPdf = async (file: File): Promise<string> => {
   const pdfBytes = await pdfDoc.save();
   const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
   return URL.createObjectURL(blob);
-};
-
-const pdfToWord = async (file: File): Promise<string> => {
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-    const pdf = await loadingTask.promise;
-    
-    let fullText = "";
-    
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(" ");
-      fullText += `<p>${pageText}</p><br/>`;
-    }
-
-    const wordHtml = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head><meta charset="utf-8"><title>Converted Document</title></head>
-      <body style="font-family: 'Times New Roman', serif; padding: 40px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #333;">Converted Document</h1>
-          <p style="color: #666;">Source: ${file.name}</p>
-          <hr/>
-        </div>
-        <div>
-          ${fullText}
-        </div>
-      </body>
-      </html>
-    `;
-
-    // Use dynamic import for html-docx-js-typescript to avoid SSR issues if any
-    const asBlob = (await import('html-docx-js-typescript')).asBlob;
-    const blob = await asBlob(wordHtml);
-    return URL.createObjectURL(blob);
-  } catch (error) {
-    console.error("PDF to Word conversion failed:", error);
-    // Fallback to mock if real conversion fails
-    return mockProcess(file, 'pdf-to-word');
-  }
 };
 
 const mockProcess = async (file: File, toolSlug: string): Promise<string> => {

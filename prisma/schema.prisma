@@ -91,3 +91,9 @@ model ToolUsage {
 
   @@unique([userId, toolSlug])
 }
+
+model WhitelistedEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

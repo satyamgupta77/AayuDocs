@@ -4,7 +4,10 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { siteConfig } from "@/config/site";
 import { ClerkProvider } from '@clerk/nextjs';
-import { Analytics } from '@vercel/analytics/next';
+import { headers } from "next/headers";
+import { Navbar } from "@/components/sections/Navbar";
+import { Footer } from "@/components/sections/Footer";
+import { Analytics } from "@vercel/analytics/next";
 
 const outfit = Outfit({ 
   subsets: ["latin"],
@@ -89,19 +92,19 @@ export const metadata: Metadata = {
   },
 };
 
-import { headers } from "next/headers";
-import { Navbar } from "@/components/sections/Navbar";
-import { Footer } from "@/components/sections/Footer";
-import { Analytics } from "@vercel/analytics/next";
-
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const headersList = await headers();
-  const pathname = headersList.get("x-invoke-path") || "";
-  const isAdmin = pathname.startsWith("/admin");
+  const pathname = headersList.get("x-pathname") || "";
+  
+  // Robust detection for marketing pages vs app/admin pages
+  const isMarketing = !pathname.startsWith("/admin") && 
+                      !pathname.startsWith("/sign-in") && 
+                      !pathname.startsWith("/sign-up") &&
+                      !pathname.startsWith("/dashboard");
 
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
@@ -113,15 +116,14 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {!isAdmin && <Navbar />}
+            {isMarketing && <Navbar />}
             <main className="flex-1">
               {children}
             </main>
-            {!isAdmin && <Footer />}
+            {isMarketing && <Footer />}
             <Analytics />
           </ThemeProvider>
         </ClerkProvider>
-        <Analytics />
       </body>
     </html>
   );
