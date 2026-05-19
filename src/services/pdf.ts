@@ -4,6 +4,10 @@ export const processPdfTool = async (files: File[], toolSlug: string): Promise<s
   if (files.length === 0) throw new Error("No files provided");
 
   switch (toolSlug) {
+    case 'ppt-to-pdf':
+      return await pptToPdf(files[0]);
+    case 'pdf-to-ppt':
+      return await pdfToPpt(files[0]);
     case 'merge-pdf':
       return await mergePdfs(files);
     case 'split-pdf':
@@ -204,6 +208,116 @@ const watermarkPdf = async (file: File): Promise<string> => {
   const pdfBytes = await pdfDoc.save();
   const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
   return URL.createObjectURL(blob);
+};
+
+const pptToPdf = async (file: File): Promise<string> => {
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const JSZip = (window as any).JSZip;
+  const zip = new JSZip();
+  const content = await file.arrayBuffer();
+  const loadedZip = await zip.loadAsync(content);
+  
+  // Find slide files
+  const slideFiles = Object.keys(loadedZip.files).filter(name => 
+    name.startsWith("ppt/slides/slide") && name.endsWith(".xml")
+  ).sort((a, b) => {
+    const numA = parseInt(a.replace(/[^\d]/g, ""), 10);
+    const numB = parseInt(b.replace(/[^\d]/g, ""), 10);
+    return numA - numB;
+  });
+  
+  const slidesHtml: string[] = [];
+  
+  if (slideFiles.length === 0) {
+    slidesHtml.push(`
+      <div style="padding: 40px; text-align: center; font-family: sans-serif;">
+        <h2>Presentation Document</h2>
+        <p>Source file: ${file.name}</p>
+      </div>
+    `);
+  } else {
+    for (const slideFile of slideFiles) {
+      const xmlText = await loadedZip.files[slideFile].async("text");
+      // Extract text in <a:t>...</a:t>
+      const textMatches = xmlText.match(/<a:t>([^<]*)<\/a:t>/g) || [];
+      const textRuns = textMatches.map(m => m.replace(/<\/?a:t>/g, ""));
+      
+      const title = textRuns[0] || "Slide";
+      const bodyPoints = textRuns.slice(1).filter(t => t.trim().length > 0);
+      
+      slidesHtml.push(`
+        <div style="width: 297mm; height: 210mm; padding: 40px; box-sizing: border-box; background-color: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; position: relative;">
+          <div>
+            <h1 style="color: #38bdf8; font-size: 32px; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px;">${title}</h1>
+            <ul style="font-size: 18px; line-height: 1.8; color: #cbd5e1; padding-left: 20px;">
+              ${bodyPoints.map(pt => `<li style="margin-bottom: 10px;">${pt}</li>`).join("")}
+            </ul>
+          </div>
+          <div style="position: absolute; bottom: 20px; right: 40px; font-size: 12px; color: #64748b;">
+            AayuDocs Presentation Converter | Page ${slidesHtml.length + 1}
+          </div>
+        </div>
+      `);
+    }
+  }
+  
+  const element = document.createElement("div");
+  element.innerHTML = slidesHtml.join("");
+  
+  const html2pdf = (await import('html2pdf.js')).default;
+  const opt = {
+    margin: 0,
+    filename: file.name.replace(/\.[^/.]+$/, "") + ".pdf",
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+  };
+  
+  const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+  return URL.createObjectURL(pdfBlob);
+};
+
+const pdfToPpt = async (file: File): Promise<string> => {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfjs = await import('pdfjs-dist');
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+  
+  const loadingTask = pdfjs.getDocument(arrayBuffer);
+  const pdf = await loadingTask.promise;
+  
+  await loadScript("https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js");
+  const PptxGenJS = (window as any).PptxGenJS;
+  const pptx = new PptxGenJS();
+  
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const strings = content.items.map((item: any) => item.str);
+    
+    const slide = pptx.addSlide();
+    slide.background = { color: "0f172a" };
+    
+    slide.addText(`AayuDocs Converted Slide ${i}`, { 
+      x: 0.5, y: 0.5, w: 9, h: 0.8, 
+      fontSize: 24, color: "38bdf8", bold: true 
+    });
+    
+    const fullText = strings.join(" ");
+    const bulletPoints = fullText.split(". ").filter(p => p.trim().length > 0).map(p => p.trim());
+    
+    if (bulletPoints.length > 0) {
+      slide.addText(
+        bulletPoints.map(p => ({ text: p, options: { bullet: true } })), 
+        { 
+          x: 0.5, y: 1.5, w: 9, h: 5.5, 
+          fontSize: 14, color: "cbd5e1", lineSpacing: 24
+        }
+      );
+    }
+  }
+  
+  const pptxBlob = await pptx.write("blob");
+  return URL.createObjectURL(pptxBlob as Blob);
 };
 
 const mockProcess = async (file: File, toolSlug: string): Promise<string> => {

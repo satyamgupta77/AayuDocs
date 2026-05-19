@@ -21,6 +21,8 @@ import { Copy } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import { BackgroundRemoverEditor } from "./BackgroundRemoverEditor";
+import { PdfPptEditor } from "./PdfPptEditor";
+import { ResumeBuilderWorkspace } from "./ResumeBuilderWorkspace";
 
 const DocumentEditor = dynamic(
   () => import("@/components/shared/DocumentEditor").then((mod) => mod.DocumentEditor),
@@ -176,6 +178,64 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
         >
           <DocumentEditor />
         </motion.div>
+      ) : tool.slug === "resume-builder" || tool.slug === "ai-resume-builder" ? (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mb-16"
+        >
+          {(tool.isAi || tool.isProRequired) && !isPro ? (
+            <div className="bg-slate-900 rounded-3xl p-8 md:p-12 border border-violet-500/30 text-center relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                Premium Feature
+              </div>
+              <div className="w-16 h-16 bg-violet-500/10 text-violet-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-violet-500/20">
+                <Icon size={32} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Unlock {tool.title}</h3>
+              <p className="text-slate-400 max-w-lg mx-auto mb-8">
+                This feature is available exclusively on the AayuDocs Pro plan. Upgrade now to get unlimited access to all tools and premium templates.
+              </p>
+              <Link href="/pricing">
+                <Button className="h-12 px-8 text-lg font-semibold bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white border-0 shadow-lg shadow-violet-500/20">
+                  Upgrade to Pro
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <ResumeBuilderWorkspace />
+          )}
+        </motion.div>
+      ) : tool.slug === "pdf-editor" || tool.slug === "ppt-editor" ? (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mb-16"
+        >
+          {(tool.isAi || tool.isProRequired) && !isPro ? (
+            <div className="bg-slate-900 rounded-3xl p-8 md:p-12 border border-violet-500/30 text-center relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                Premium Feature
+              </div>
+              <div className="w-16 h-16 bg-violet-500/10 text-violet-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-violet-500/20">
+                <Icon size={32} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Unlock {tool.title}</h3>
+              <p className="text-slate-400 max-w-lg mx-auto mb-8">
+                Direct editing of PDF and PPT files is available exclusively on the AayuDocs Pro plan. Upgrade now to get full edit access.
+              </p>
+              <Link href="/pricing">
+                <Button className="h-12 px-8 text-lg font-semibold bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white border-0 shadow-lg shadow-violet-500/20">
+                  Upgrade to Pro
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <PdfPptEditor type={tool.slug === "pdf-editor" ? "pdf" : "ppt"} />
+          )}
+        </motion.div>
       ) : tool.slug === "background-remover" || tool.slug === "ai-bg-removal" ? (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -183,7 +243,7 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
           transition={{ delay: 0.3 }}
           className="mb-16"
         >
-          {tool.isAi && !isPro ? (
+          {(tool.isAi || tool.isProRequired) && !isPro ? (
             <div className="bg-slate-900 rounded-3xl p-8 md:p-12 border border-violet-500/30 text-center relative overflow-hidden shadow-2xl">
               <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
                 Premium Feature
@@ -212,7 +272,7 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
         transition={{ delay: 0.3 }}
         className="mb-16"
       >
-        {tool.isAi && !isPro ? (
+        {(tool.isAi || tool.isProRequired) && !isPro ? (
           <div className="bg-slate-900 rounded-3xl p-8 md:p-12 border border-violet-500/30 text-center relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
               Premium Feature

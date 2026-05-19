@@ -2,7 +2,8 @@ import {
   FileText, FileImage, Layers, SplitSquareHorizontal, 
   Image as ImageIcon, ScanText, QrCode, FileArchive, 
   Briefcase, Eraser, FileDown, RotateCw, Unlock, Shield,
-  ImagePlay, Sparkles, Bot, FileSignature, BrainCircuit
+  ImagePlay, Sparkles, Bot, FileSignature, BrainCircuit,
+  Presentation, Edit3
 } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -15,9 +16,48 @@ export type ToolConfig = {
   color: string;
   category: "PDF" | "Image" | "Utility" | "AI";
   isAi?: boolean;
+  isProRequired?: boolean;
 };
 
 export const toolsConfig: ToolConfig[] = [
+  {
+    id: "ppt-to-pdf",
+    slug: "ppt-to-pdf",
+    title: "PPT to PDF",
+    description: "Convert PowerPoint presentations to PDF format online, absolutely free.",
+    icon: Presentation,
+    color: "bg-orange-100 text-orange-605 dark:bg-orange-900/30 dark:text-orange-400",
+    category: "PDF",
+  },
+  {
+    id: "pdf-to-ppt",
+    slug: "pdf-to-ppt",
+    title: "PDF to PPT",
+    description: "Convert PDF documents into editable PowerPoint presentation slides, absolutely free.",
+    icon: Presentation,
+    color: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+    category: "PDF",
+  },
+  {
+    id: "pdf-editor",
+    slug: "pdf-editor",
+    title: "PDF Editor",
+    description: "Directly edit your PDF file online. Edit text, add images, draw, and modify layout elements.",
+    icon: Edit3,
+    color: "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
+    category: "PDF",
+    isProRequired: true,
+  },
+  {
+    id: "ppt-editor",
+    slug: "ppt-editor",
+    title: "PPT Editor",
+    description: "Directly edit your PowerPoint presentation slides online. Reorder slides, edit text, and format elements.",
+    icon: Presentation,
+    color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    category: "PDF",
+    isProRequired: true,
+  },
   {
     id: "word-to-pdf",
     slug: "word-to-pdf",
