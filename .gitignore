@@ -44,3 +44,7 @@ next-env.d.ts
 /.clerk/
 
 /src/generated/prisma
+
+# gemini agent logs
+.gemini/
+
