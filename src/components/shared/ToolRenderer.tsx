@@ -20,6 +20,7 @@ import { Copy } from "lucide-react";
 
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
+import { BackgroundRemoverEditor } from "./BackgroundRemoverEditor";
 
 const DocumentEditor = dynamic(
   () => import("@/components/shared/DocumentEditor").then((mod) => mod.DocumentEditor),
@@ -51,6 +52,8 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
   const [maxSize, setMaxSize] = useState(1);
   const [maxDim, setMaxDim] = useState(1920);
   const [copied, setCopied] = useState(false);
+  const [resizeScale, setResizeScale] = useState(50);
+  const [cropRatio, setCropRatio] = useState("1:1");
 
   const isMultiFile = tool.slug === "merge-pdf" || tool.slug === "image-to-pdf";
 
@@ -100,7 +103,9 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
         url = await processImageTool(activeFiles, tool.slug, { 
           filter: imageFilter,
           maxSizeMB: maxSize,
-          maxWidthOrHeight: maxDim
+          maxWidthOrHeight: maxDim,
+          scale: resizeScale,
+          aspectRatio: cropRatio
         });
       } else if (tool.slug === "image-to-pdf") {
         url = await processImageTool(activeFiles, tool.slug);
@@ -170,6 +175,35 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
           className="mb-16"
         >
           <DocumentEditor />
+        </motion.div>
+      ) : tool.slug === "background-remover" || tool.slug === "ai-bg-removal" ? (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mb-16"
+        >
+          {tool.isAi && !isPro ? (
+            <div className="bg-slate-900 rounded-3xl p-8 md:p-12 border border-violet-500/30 text-center relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                Premium Feature
+              </div>
+              <div className="w-16 h-16 bg-violet-500/10 text-violet-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-violet-500/20">
+                <Icon size={32} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Unlock {tool.title}</h3>
+              <p className="text-slate-400 max-w-lg mx-auto mb-8">
+                This AI-powered feature is available exclusively on the AayuDocs Pro plan. Upgrade now to get unlimited access to all AI tools and priority processing speeds.
+              </p>
+              <Link href="/pricing">
+                <Button className="h-12 px-8 text-lg font-semibold bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white border-0 shadow-lg shadow-violet-500/20">
+                  Upgrade to Pro
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <BackgroundRemoverEditor />
+          )}
         </motion.div>
       ) : (
       <motion.div
@@ -338,6 +372,43 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
                       />
                       <p className="text-[10px] text-slate-500 italic">Longest side (width or height)</p>
                     </div>
+                  </div>
+                )}
+
+                {tool.slug === 'resize-image' && (
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-700 dark:text-slate-300 font-medium">Resize Scale Percentage</span>
+                      <span className="font-semibold text-violet-600 dark:text-violet-400">{resizeScale}%</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="10" 
+                      max="100" 
+                      value={resizeScale}
+                      onChange={(e) => setResizeScale(Number(e.target.value))}
+                      className="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-600"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500">
+                      <span>10% (Small)</span>
+                      <span>100% (Original size)</span>
+                    </div>
+                  </div>
+                )}
+
+                {tool.slug === 'crop-image' && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Select Crop Aspect Ratio</label>
+                    <select 
+                      value={cropRatio} 
+                      onChange={(e) => setCropRatio(e.target.value)}
+                      className="w-full md:w-1/2 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-violet-500"
+                    >
+                      <option value="1:1">Square (1:1)</option>
+                      <option value="16:9">Widescreen (16:9)</option>
+                      <option value="4:5">Portrait (4:5)</option>
+                    </select>
+                    <p className="text-[10px] text-slate-500 italic mt-1">Crops the center of the image to the specified aspect ratio.</p>
                   </div>
                 )}
 

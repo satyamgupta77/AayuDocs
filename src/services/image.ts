@@ -131,16 +131,17 @@ const compressImage = async (file: File, options?: any): Promise<string> => {
   return URL.createObjectURL(compressedFile);
 };
 
-const resizeImage = async (file: File): Promise<string> => {
-  // Demo: Scale down to 50%
+const resizeImage = async (file: File, options?: any): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = img.width * 0.5;
-      canvas.height = img.height * 0.5;
+      const scale = (options?.scale || 100) / 100;
+      
+      canvas.width = options?.width || img.width * scale;
+      canvas.height = options?.height || img.height * scale;
       
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error("Failed to get canvas context"));
@@ -159,26 +160,50 @@ const resizeImage = async (file: File): Promise<string> => {
   });
 };
 
-const cropImage = async (file: File): Promise<string> => {
-  // Demo: Crop center 50%
+const cropImage = async (file: File, options?: any): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = img.width * 0.5;
-      canvas.height = img.height * 0.5;
+      const ratio = options?.aspectRatio || '1:1';
+      
+      let cropWidth = img.width;
+      let cropHeight = img.height;
+      
+      if (ratio === '1:1') {
+        const size = Math.min(img.width, img.height);
+        cropWidth = size;
+        cropHeight = size;
+      } else if (ratio === '16:9') {
+        if (img.width / img.height > 16 / 9) {
+          cropWidth = img.height * (16 / 9);
+          cropHeight = img.height;
+        } else {
+          cropWidth = img.width;
+          cropHeight = img.width * (9 / 16);
+        }
+      } else if (ratio === '4:5') {
+        if (img.width / img.height > 4 / 5) {
+          cropWidth = img.height * (4 / 5);
+          cropHeight = img.height;
+        } else {
+          cropWidth = img.width;
+          cropHeight = img.width * (5 / 4);
+        }
+      }
+      
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
       
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error("Failed to get canvas context"));
       
-      const srcX = img.width * 0.25;
-      const srcY = img.height * 0.25;
-      const srcW = img.width * 0.5;
-      const srcH = img.height * 0.5;
+      const srcX = (img.width - cropWidth) / 2;
+      const srcY = (img.height - cropHeight) / 2;
       
-      ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
       
       canvas.toBlob((blob) => {
         if (!blob) return reject(new Error("Canvas toBlob failed"));
