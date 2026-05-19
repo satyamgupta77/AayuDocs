@@ -1,6 +1,6 @@
 <div align="center">
   <img src="public/logo.png" alt="AayuDocs Logo" width="120" height="120" />
-  <h1>📄 AayuDocs</h1>
+  <h1>📄 AayuDocs</h 1>
   <p><strong>The Ultimate Intelligent Document Workspace & Premium AI SaaS Platform</strong></p>
 
   <p>
