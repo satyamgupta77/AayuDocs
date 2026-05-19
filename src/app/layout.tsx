@@ -5,9 +5,6 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { siteConfig } from "@/config/site";
 import { ClerkProvider } from '@clerk/nextjs';
-import { headers } from "next/headers";
-import { Navbar } from "@/components/sections/Navbar";
-import { Footer } from "@/components/sections/Footer";
 import { Analytics } from "@vercel/analytics/next";
 
 const outfit = Outfit({ 
@@ -98,15 +95,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || "";
-  
-  // Robust detection for marketing pages vs app/admin pages
-  const isMarketing = !pathname.startsWith("/admin") && 
-                      !pathname.startsWith("/sign-in") && 
-                      !pathname.startsWith("/sign-up") &&
-                      !pathname.startsWith("/dashboard");
-
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${outfit.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
@@ -117,11 +105,9 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {isMarketing && <Navbar />}
-            <main className="flex-1">
+            <div className="flex flex-col min-h-screen">
               {children}
-            </main>
-            {isMarketing && <Footer />}
+            </div>
             <Analytics />
           </ThemeProvider>
         </ClerkProvider>

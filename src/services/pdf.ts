@@ -36,23 +36,62 @@ const protectPdf = async (file: File): Promise<string> => {
   return mockProcess(file, 'protect-pdf');
 };
 
+const loadScript = (src: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') {
+      resolve();
+      return;
+    }
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load script ${src}`));
+    document.body.appendChild(script);
+  });
+};
+
 const wordToPdf = async (file: File): Promise<string> => {
-  // In a real browser env, we'd use a more complex parser for .docx
-  // For now, we read as text/html and convert to PDF
-  const text = await file.text();
+  let htmlContent = "";
+
+  if (file.name.endsWith('.docx')) {
+    try {
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js");
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await (window as any).mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+      htmlContent = result.value;
+    } catch (err) {
+      console.error("Mammoth DOCX conversion failed, falling back to text read:", err);
+      const text = await file.text();
+      htmlContent = `<div style="white-space: pre-wrap;">${text}</div>`;
+    }
+  } else {
+    const text = await file.text();
+    htmlContent = `<div style="white-space: pre-wrap;">${text}</div>`;
+  }
+
   const element = document.createElement('div');
   element.innerHTML = `
-    <div style="padding: 40px; font-family: sans-serif;">
-      <h1 style="color: #7c3aed;">AayuDocs Converted PDF</h1>
-      <hr/>
-      <div style="margin-top: 20px; line-height: 1.6;">
-        ${text.replace(/\n/g, '<br/>')}
+    <div style="padding: 40px; font-family: sans-serif; background-color: #ffffff; color: #000000; min-height: 297mm; box-sizing: border-box;">
+      <div style="margin-top: 10px; line-height: 1.6;">
+        ${htmlContent}
       </div>
     </div>
   `;
   
   const html2pdf = (await import('html2pdf.js')).default;
-  const pdfBlob = await html2pdf().from(element).output('blob');
+  const opt = {
+    margin: [15, 15, 15, 15] as [number, number, number, number],
+    filename: file.name.replace(/\.[^/.]+$/, "") + ".pdf",
+    image: { type: 'jpeg' as const, quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+  };
+
+  const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
   return URL.createObjectURL(pdfBlob);
 };
 
@@ -60,7 +99,7 @@ const pdfToWord = async (file: File): Promise<string> => {
   // Demo: Extract text and wrap in HTML for Word
   const arrayBuffer = await file.arrayBuffer();
   const pdfjs = await import('pdfjs-dist');
-  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
   
   const loadingTask = pdfjs.getDocument(arrayBuffer);
   const pdf = await loadingTask.promise;
