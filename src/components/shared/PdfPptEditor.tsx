@@ -115,7 +115,7 @@ export function PdfPptEditor({ type }: PdfPptEditorProps) {
         
         const ctx = canvas.getContext("2d");
         if (ctx) {
-          await page.render({ canvasContext: ctx, viewport }).promise;
+          await page.render({ canvasContext: ctx, canvas, viewport }).promise;
           images.push(canvas.toDataURL());
         }
       }
@@ -157,10 +157,10 @@ export function PdfPptEditor({ type }: PdfPptEditorProps) {
         for (let i = 0; i < slideFiles.length; i++) {
           const xmlText = await loadedZip.files[slideFiles[i]].async("text");
           const textMatches = xmlText.match(/<a:t>([^<]*)<\/a:t>/g) || [];
-          const textRuns = textMatches.map(m => m.replace(/<\/?a:t>/g, ""));
+          const textRuns = textMatches.map((m: string) => m.replace(/<\/?a:t>/g, ""));
           
           const title = textRuns[0] || `Slide ${i + 1}`;
-          const bullets = textRuns.slice(1).filter(t => t.trim().length > 0);
+          const bullets = textRuns.slice(1).filter((t: string) => t.trim().length > 0);
           
           extractedSlides.push({
             id: `slide-${i + 1}`,
@@ -310,7 +310,7 @@ export function PdfPptEditor({ type }: PdfPptEditorProps) {
       }
       
       const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       
       const link = document.createElement("a");
@@ -391,11 +391,12 @@ export function PdfPptEditor({ type }: PdfPptEditorProps) {
               className="hidden" 
               id="file-editor-upload" 
             />
-            <Button asChild size="lg" className="bg-gradient-to-r from-violet-600 to-blue-500 text-white rounded-xl shadow-lg cursor-pointer">
-              <label htmlFor="file-editor-upload">
-                <FileUp className="mr-2 h-5 w-5" /> Select File
-              </label>
-            </Button>
+            <label
+              htmlFor="file-editor-upload"
+              className="inline-flex items-center justify-center bg-gradient-to-r from-violet-600 to-blue-500 text-white rounded-xl shadow-lg cursor-pointer px-6 py-3 text-sm font-semibold hover:from-violet-500 hover:to-blue-400 transition-all"
+            >
+              <FileUp className="mr-2 h-5 w-5" /> Select File
+            </label>
           </div>
         </Card>
       ) : (

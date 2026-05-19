@@ -240,17 +240,17 @@ const pptToPdf = async (file: File): Promise<string> => {
       const xmlText = await loadedZip.files[slideFile].async("text");
       // Extract text in <a:t>...</a:t>
       const textMatches = xmlText.match(/<a:t>([^<]*)<\/a:t>/g) || [];
-      const textRuns = textMatches.map(m => m.replace(/<\/?a:t>/g, ""));
+      const textRuns = textMatches.map((m: string) => m.replace(/<\/?a:t>/g, ""));
       
       const title = textRuns[0] || "Slide";
-      const bodyPoints = textRuns.slice(1).filter(t => t.trim().length > 0);
+      const bodyPoints = textRuns.slice(1).filter((t: string) => t.trim().length > 0);
       
       slidesHtml.push(`
         <div style="width: 297mm; height: 210mm; padding: 40px; box-sizing: border-box; background-color: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; position: relative;">
           <div>
             <h1 style="color: #38bdf8; font-size: 32px; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px;">${title}</h1>
             <ul style="font-size: 18px; line-height: 1.8; color: #cbd5e1; padding-left: 20px;">
-              ${bodyPoints.map(pt => `<li style="margin-bottom: 10px;">${pt}</li>`).join("")}
+              ${bodyPoints.map((pt: string) => `<li style="margin-bottom: 10px;">${pt}</li>`).join("")}
             </ul>
           </div>
           <div style="position: absolute; bottom: 20px; right: 40px; font-size: 12px; color: #64748b;">
@@ -268,9 +268,9 @@ const pptToPdf = async (file: File): Promise<string> => {
   const opt = {
     margin: 0,
     filename: file.name.replace(/\.[^/.]+$/, "") + ".pdf",
-    image: { type: 'jpeg', quality: 0.98 },
+    image: { type: 'jpeg' as const, quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'landscape' as const }
   };
   
   const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
