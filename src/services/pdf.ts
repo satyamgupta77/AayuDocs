@@ -58,7 +58,67 @@ const loadScript = (src: string): Promise<void> => {
   });
 };
 
+const callCloudConvert = async (file: File, fromFormat: string, toFormat: string): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("fromFormat", fromFormat);
+  formData.append("toFormat", toFormat);
+
+  const response = await fetch("/api/convert", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: "Unknown API error" }));
+    throw new Error(err.error || "Conversion API failed");
+  }
+
+  const data = await response.json();
+  const fileRes = await fetch(data.url);
+  const blob = await fileRes.blob();
+  return URL.createObjectURL(blob);
+};
+
 const wordToPdf = async (file: File): Promise<string> => {
+  try {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'docx';
+    return await callCloudConvert(file, ext, 'pdf');
+  } catch (error: any) {
+    console.warn("CloudConvert API failed, using fallback:", error.message);
+    return await wordToPdfFallback(file);
+  }
+};
+
+const pdfToWord = async (file: File): Promise<string> => {
+  try {
+    return await callCloudConvert(file, 'pdf', 'docx');
+  } catch (error: any) {
+    console.warn("CloudConvert API failed, using fallback:", error.message);
+    return await pdfToWordFallback(file);
+  }
+};
+
+const pptToPdf = async (file: File): Promise<string> => {
+  try {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'pptx';
+    return await callCloudConvert(file, ext, 'pdf');
+  } catch (error: any) {
+    console.warn("CloudConvert API failed, using fallback:", error.message);
+    return await pptToPdfFallback(file);
+  }
+};
+
+const pdfToPpt = async (file: File): Promise<string> => {
+  try {
+    return await callCloudConvert(file, 'pdf', 'pptx');
+  } catch (error: any) {
+    console.warn("CloudConvert API failed, using fallback:", error.message);
+    return await pdfToPptFallback(file);
+  }
+};
+
+const wordToPdfFallback = async (file: File): Promise<string> => {
   let htmlContent = "";
 
   if (file.name.endsWith('.docx')) {
@@ -99,7 +159,7 @@ const wordToPdf = async (file: File): Promise<string> => {
   return URL.createObjectURL(pdfBlob);
 };
 
-const pdfToWord = async (file: File): Promise<string> => {
+const pdfToWordFallback = async (file: File): Promise<string> => {
   // Demo: Extract text and wrap in HTML for Word
   const arrayBuffer = await file.arrayBuffer();
   const pdfjs = await import('pdfjs-dist');
@@ -210,7 +270,7 @@ const watermarkPdf = async (file: File): Promise<string> => {
   return URL.createObjectURL(blob);
 };
 
-const pptToPdf = async (file: File): Promise<string> => {
+const pptToPdfFallback = async (file: File): Promise<string> => {
   await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
   const JSZip = (window as any).JSZip;
   const zip = new JSZip();
@@ -267,7 +327,7 @@ const pptToPdf = async (file: File): Promise<string> => {
   const html2pdf = (await import('html2pdf.js')).default;
   const opt = {
     margin: 0,
-    filename: file.name.replace(/\.[^/.]+$/, "") + ".pdf",
+    filename: file.name.replace(/\\.[^/.]+$/, "") + ".pdf",
     image: { type: 'jpeg' as const, quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'landscape' as const }
@@ -277,7 +337,7 @@ const pptToPdf = async (file: File): Promise<string> => {
   return URL.createObjectURL(pdfBlob);
 };
 
-const pdfToPpt = async (file: File): Promise<string> => {
+const pdfToPptFallback = async (file: File): Promise<string> => {
   const arrayBuffer = await file.arrayBuffer();
   const pdfjs = await import('pdfjs-dist');
   pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -303,11 +363,11 @@ const pdfToPpt = async (file: File): Promise<string> => {
     });
     
     const fullText = strings.join(" ");
-    const bulletPoints = fullText.split(". ").filter(p => p.trim().length > 0).map(p => p.trim());
+    const bulletPoints = fullText.split(". ").filter((p: string) => p.trim().length > 0).map((p: string) => p.trim());
     
     if (bulletPoints.length > 0) {
       slide.addText(
-        bulletPoints.map(p => ({ text: p, options: { bullet: true } })), 
+        bulletPoints.map((p: string) => ({ text: p, options: { bullet: true } })), 
         { 
           x: 0.5, y: 1.5, w: 9, h: 5.5, 
           fontSize: 14, color: "cbd5e1", lineSpacing: 24
@@ -323,23 +383,8 @@ const pdfToPpt = async (file: File): Promise<string> => {
 const mockProcess = async (file: File, toolSlug: string): Promise<string> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      if (toolSlug === 'pdf-to-word') {
-        const wordHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><title>Converted Document</title></head>
-<body style="font-family: Calibri, sans-serif; padding: 20px;">
-<h1 style="color: #7c3aed;">AayuDocs Converted Word Document</h1>
-<hr/>
-<p><b>Source File:</b> ${file?.name || 'document.pdf'}</p>
-<p><b>Status:</b> Successfully analyzed and extracted layout elements into editable Word text format.</p>
-<br/>
-<p><i>Note: This document has been optimized for clean native viewing and editing inside Microsoft Word.</i></p>
-</body></html>`;
-        const blob = new Blob([wordHtml], { type: "application/msword" });
-        resolve(URL.createObjectURL(blob));
-      } else {
-        const blob = new Blob([`Mock processed content for ${toolSlug}: ${file?.name}`], { type: "text/plain" });
-        resolve(URL.createObjectURL(blob));
-      }
+      const blob = new Blob([`Mock processed content for ${toolSlug}: ${file?.name}`], { type: "text/plain" });
+      resolve(URL.createObjectURL(blob));
     }, 1500);
   });
 };

@@ -1,17 +1,15 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
 import { 
-  Upload, FileUp, Settings, Download, X, 
-  RotateCcw, Sliders, Image as ImageIcon, Paintbrush, 
-  Sparkles, Check, HelpCircle
+  Upload, FileUp, Download, X, 
+  Paintbrush, Check, Loader2, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useAppStore } from "@/hooks/useAppStore";
 import { useDropzone } from "react-dropzone";
+import { removeBackground } from "@imgly/background-removal";
 
 const PRESET_COLORS = [
   { name: "Transparent", value: "transparent" },
@@ -46,13 +44,13 @@ const PRESET_IMAGES = [
 
 export function BackgroundRemoverEditor() {
   const { activeFiles, setActiveFiles } = useAppStore();
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   
   // Editor State
-  const [targetColor, setTargetColor] = useState<string>("#ffffff");
-  const [tolerance, setTolerance] = useState<number>(15);
-  const [feather, setFeather] = useState<number>(3);
+  const [originalImageSrc, setOriginalImageSrc] = useState<string | null>(null);
+  const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
+  const [processedImage, setProcessedImage] = useState<HTMLImageElement | null>(null);
+  const [isProcessingAI, setIsProcessingAI] = useState(false);
+  const [progressMsg, setProgressMsg] = useState("");
   
   // Background selection state
   const [bgType, setBgType] = useState<"transparent" | "color" | "gradient" | "image">("transparent");
@@ -61,41 +59,55 @@ export function BackgroundRemoverEditor() {
   
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Load uploaded file
+  // Load uploaded file and process AI Background Removal
   useEffect(() => {
-    if (activeFiles.length > 0) {
-      const file = activeFiles[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
+    const processImage = async () => {
+      if (activeFiles.length > 0) {
+        const file = activeFiles[0];
+        const url = URL.createObjectURL(file);
+        setOriginalImageSrc(url);
+        
+        setIsProcessingAI(true);
+        setProgressMsg("Initializing AI Model...");
+        
+        try {
+          const blob = await removeBackground(file, {
+            progress: (key, current, total) => {
+              if (key === 'compute:inference') {
+                setProgressMsg(`Removing Background... ${Math.round((current / total) * 100)}%`);
+              } else if (key === 'fetch:model') {
+                setProgressMsg(`Downloading AI Model... ${Math.round((current / total) * 100)}%`);
+              }
+            }
+          });
+          
+          const processedUrl = URL.createObjectURL(blob);
+          setProcessedImageUrl(processedUrl);
+          
           const img = new Image();
           img.onload = () => {
-            setOriginalImage(img);
-            // Default targetColor to top-left pixel color to make removal automatic
-            const tempCanvas = document.createElement("canvas");
-            tempCanvas.width = 1;
-            tempCanvas.height = 1;
-            const tempCtx = tempCanvas.getContext("2d");
-            if (tempCtx) {
-              tempCtx.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
-              const pixel = tempCtx.getImageData(0, 0, 1, 1).data;
-              setTargetColor(rgbToHex(pixel[0], pixel[1], pixel[2]));
-            }
+            setProcessedImage(img);
           };
-          img.src = e.target.result as string;
-          setImageSrc(e.target.result as string);
+          img.src = processedUrl;
+        } catch (error) {
+          console.error("AI Background Removal failed:", error);
+          setProgressMsg("Failed to remove background. Please try again.");
+        } finally {
+          setIsProcessingAI(false);
         }
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setImageSrc(null);
-      setOriginalImage(null);
-    }
+      } else {
+        setOriginalImageSrc(null);
+        setProcessedImageUrl(null);
+        setProcessedImage(null);
+      }
+    };
+    
+    processImage();
   }, [activeFiles]);
 
-  // Re-run background removal when parameters change
+  // Render on Canvas when processed image or background changes
   useEffect(() => {
-    if (!originalImage || !canvasRef.current) return;
+    if (!processedImage || !canvasRef.current) return;
     
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -103,8 +115,8 @@ export function BackgroundRemoverEditor() {
     
     // Scale image down slightly for editing preview performance if it's huge
     const maxDim = 800;
-    let width = originalImage.width;
-    let height = originalImage.height;
+    let width = processedImage.width;
+    let height = processedImage.height;
     if (width > maxDim || height > maxDim) {
       if (width > height) {
         height = (height / width) * maxDim;
@@ -117,82 +129,13 @@ export function BackgroundRemoverEditor() {
     
     canvas.width = width;
     canvas.height = height;
-    ctx.drawImage(originalImage, 0, 0, width, height);
     
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const data = imageData.data;
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
     
-    const [tr, tg, tb] = hexToRgb(targetColor);
-    const tol = tolerance;
-    const ft = feather;
-    
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i+1];
-      const b = data[i+2];
-      
-      const distance = Math.sqrt(
-        (r - tr) ** 2 +
-        (g - tg) ** 2 +
-        (b - tb) ** 2
-      );
-      
-      const normalizedDistance = (distance / 441.67) * 100;
-      
-      if (normalizedDistance < tol) {
-        if (ft > 0 && normalizedDistance > tol - ft) {
-          const ratio = (normalizedDistance - (tol - ft)) / ft;
-          data[i+3] = Math.round(ratio * 255);
-        } else {
-          data[i+3] = 0;
-        }
-      }
-    }
-    
-    ctx.putImageData(imageData, 0, 0);
-  }, [originalImage, targetColor, tolerance, feather]);
-
-  // Convert RGB to HEX
-  const rgbToHex = (r: number, g: number, b: number) => {
-    return "#" + [r, g, b].map(x => {
-      const hex = x.toString(16);
-      return hex.length === 1 ? "0" + hex : hex;
-    }).join("");
-  };
-
-  // Convert HEX to RGB
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? [
-      parseInt(result[1], 16),
-      parseInt(result[2], 16),
-      parseInt(result[3], 16)
-    ] : [255, 255, 255];
-  };
-
-  // Sample color from canvas click
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.floor(((e.clientX - rect.left) / rect.width) * canvas.width);
-    const y = Math.floor(((e.clientY - rect.top) / rect.height) * canvas.height);
-    
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    
-    // Draw original image on offscreen canvas to sample original color accurately
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext("2d");
-    if (tempCtx && originalImage) {
-      tempCtx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
-      const pixel = tempCtx.getImageData(x, y, 1, 1).data;
-      const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-      setTargetColor(hex);
-    }
-  };
+    // Draw the processed image with transparent background
+    ctx.drawImage(processedImage, 0, 0, width, height);
+  }, [processedImage]);
 
   // Custom Background Upload
   const handleCustomBgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,11 +150,11 @@ export function BackgroundRemoverEditor() {
 
   // Download composed image
   const handleDownload = async () => {
-    if (!originalImage || !canvasRef.current) return;
+    if (!processedImage || !canvasRef.current) return;
     
     const finalCanvas = document.createElement("canvas");
-    finalCanvas.width = originalImage.width;
-    finalCanvas.height = originalImage.height;
+    finalCanvas.width = processedImage.width;
+    finalCanvas.height = processedImage.height;
     const ctx = finalCanvas.getContext("2d");
     if (!ctx) return;
 
@@ -250,45 +193,8 @@ export function BackgroundRemoverEditor() {
       });
     }
 
-    // 2. Draw Keyed Foreground (original image size)
-    const fgCanvas = document.createElement("canvas");
-    fgCanvas.width = originalImage.width;
-    fgCanvas.height = originalImage.height;
-    const fgCtx = fgCanvas.getContext("2d");
-    if (fgCtx) {
-      fgCtx.drawImage(originalImage, 0, 0);
-      const fgData = fgCtx.getImageData(0, 0, fgCanvas.width, fgCanvas.height);
-      const data = fgData.data;
-      
-      const [tr, tg, tb] = hexToRgb(targetColor);
-      const tol = tolerance;
-      const ft = feather;
-      
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i+1];
-        const b = data[i+2];
-        
-        const distance = Math.sqrt(
-          (r - tr) ** 2 +
-          (g - tg) ** 2 +
-          (b - tb) ** 2
-        );
-        
-        const normalizedDistance = (distance / 441.67) * 100;
-        
-        if (normalizedDistance < tol) {
-          if (ft > 0 && normalizedDistance > tol - ft) {
-            const ratio = (normalizedDistance - (tol - ft)) / ft;
-            data[i+3] = Math.round(ratio * 255);
-          } else {
-            data[i+3] = 0;
-          }
-        }
-      }
-      fgCtx.putImageData(fgData, 0, 0);
-      ctx.drawImage(fgCanvas, 0, 0);
-    }
+    // 2. Draw Processed Image
+    ctx.drawImage(processedImage, 0, 0, finalCanvas.width, finalCanvas.height);
 
     // 3. Trigger Download
     const dataUrl = finalCanvas.toDataURL("image/png");
@@ -300,13 +206,12 @@ export function BackgroundRemoverEditor() {
 
   const handleReset = () => {
     setActiveFiles([]);
-    setImageSrc(null);
-    setOriginalImage(null);
+    setOriginalImageSrc(null);
+    setProcessedImageUrl(null);
+    setProcessedImage(null);
     setCustomBgUrl(null);
     setBgType("transparent");
     setBgValue("transparent");
-    setTolerance(15);
-    setFeather(3);
   };
 
   const onDrop = React.useCallback((acceptedFiles: File[]) => {
@@ -323,7 +228,7 @@ export function BackgroundRemoverEditor() {
 
   return (
     <div className="space-y-8">
-      {!imageSrc ? (
+      {!originalImageSrc ? (
         <div 
           {...getRootProps()}
           className={`group relative rounded-3xl border-2 border-dashed ${isDragActive ? "border-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/20" : "border-violet-200 dark:border-violet-900/50 bg-white/80 dark:bg-slate-900/50"} backdrop-blur-xl p-8 md:p-12 transition-all hover:border-violet-400 hover:bg-violet-50/50 dark:hover:bg-slate-800/50 shadow-xl shadow-violet-100/50 dark:shadow-none cursor-pointer`}
@@ -359,15 +264,17 @@ export function BackgroundRemoverEditor() {
                 backgroundSize: bgType === "transparent" ? "20px 20px" : undefined
               }}
             >
+              {isProcessingAI ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm z-10">
+                  <Loader2 className="h-12 w-12 text-violet-500 animate-spin mb-4" />
+                  <p className="text-white font-medium">{progressMsg}</p>
+                </div>
+              ) : null}
+              
               <canvas 
                 ref={canvasRef} 
-                className="max-w-full max-h-[520px] object-contain cursor-crosshair transition-all duration-100" 
-                onClick={handleCanvasClick}
+                className={`max-w-full max-h-[520px] object-contain transition-opacity duration-300 ${isProcessingAI ? 'opacity-0' : 'opacity-100'}`} 
               />
-              
-              <div className="absolute bottom-4 right-4 bg-slate-950/80 backdrop-blur-md border border-slate-800/80 text-[10px] text-slate-300 font-medium px-2 py-1 rounded-full flex items-center space-x-1 shadow-lg pointer-events-none">
-                <span>💡 Click on image to sample background color</span>
-              </div>
             </div>
 
             <div className="flex justify-between items-center bg-slate-900/60 border border-slate-800/80 p-4 rounded-xl backdrop-blur-md">
@@ -384,78 +291,25 @@ export function BackgroundRemoverEditor() {
           {/* Controls Panel Column */}
           <div className="lg:col-span-5 space-y-6">
             <Card className="p-6 bg-slate-900/80 border-slate-800/80 backdrop-blur-xl text-white shadow-xl">
-              <div className="flex items-center space-x-2 mb-6 border-b border-slate-800 pb-3">
-                <Sliders className="text-violet-500 h-5 w-5" />
-                <h3 className="text-lg font-semibold">Chroma-Key controls</h3>
+              <div className="flex items-center space-x-2 mb-4 border-b border-slate-800 pb-3">
+                <Sparkles className="text-violet-500 h-5 w-5" />
+                <h3 className="text-lg font-semibold">AI Background Removal</h3>
               </div>
-
-              <div className="space-y-6">
-                {/* Target Color Picker */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium text-slate-300">Selected Color</label>
-                    <span className="text-xs font-mono bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-violet-400">{targetColor.toUpperCase()}</span>
+              
+              <div className="space-y-2">
+                {isProcessingAI ? (
+                  <p className="text-sm text-slate-400">Our advanced AI model is analyzing your image to create a perfect cutout.</p>
+                ) : (
+                  <div className="flex items-center space-x-2 text-emerald-400 bg-emerald-950/30 p-3 rounded-lg border border-emerald-900/50">
+                    <Check size={18} />
+                    <span className="text-sm font-medium">Background removed flawlessly!</span>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="relative h-10 w-16 rounded-lg overflow-hidden border border-slate-700">
-                      <input 
-                        type="color" 
-                        value={targetColor}
-                        onChange={(e) => setTargetColor(e.target.value)}
-                        className="absolute inset-0 opacity-0 cursor-pointer h-full w-full"
-                      />
-                      <div className="h-full w-full" style={{ backgroundColor: targetColor }} />
-                    </div>
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      Click the swatch to choose color or click directly anywhere on the image preview to sample.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Tolerance Slider */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-300">Tolerance / Similarity</span>
-                    <span className="font-semibold text-violet-400">{tolerance}</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    value={tolerance}
-                    onChange={(e) => setTolerance(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-600"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>Exact match</span>
-                    <span>Broad match</span>
-                  </div>
-                </div>
-
-                {/* Feather Slider */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-300">Edge Smoothing (Feather)</span>
-                    <span className="font-semibold text-violet-400">{feather}px</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="20" 
-                    value={feather}
-                    onChange={(e) => setFeather(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-600"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>Sharp edges</span>
-                    <span>Soft edges</span>
-                  </div>
-                </div>
+                )}
               </div>
             </Card>
 
             {/* Background Customizer Card */}
-            <Card className="p-6 bg-slate-900/80 border-slate-800/80 backdrop-blur-xl text-white shadow-xl space-y-6">
+            <Card className={`p-6 bg-slate-900/80 border-slate-800/80 backdrop-blur-xl text-white shadow-xl space-y-6 transition-opacity duration-300 ${isProcessingAI ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
               <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
                 <Paintbrush className="text-emerald-500 h-5 w-5" />
                 <h3 className="text-lg font-semibold">Change Background</h3>
@@ -595,7 +449,8 @@ export function BackgroundRemoverEditor() {
               <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-850">
                 <Button 
                   onClick={handleDownload}
-                  className="flex-1 h-12 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white border-0 shadow-lg shadow-emerald-950/20 rounded-xl font-semibold"
+                  disabled={!processedImage}
+                  className="flex-1 h-12 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white border-0 shadow-lg shadow-emerald-950/20 rounded-xl font-semibold disabled:opacity-50"
                 >
                   <Download className="mr-2 h-4 w-4" /> Download Image
                 </Button>
