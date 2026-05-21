@@ -4,6 +4,8 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 import crypto from "crypto";
+// @ts-ignore
+import ILovePDFFile from "@ilovepdf/ilovepdf-nodejs/ILovePDFFile";
 
 // Map toolSlugs to iLovePDF Tool names
 const toolMap: Record<string, string> = {
@@ -77,7 +79,7 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       await fs.writeFile(inputFilePath, Buffer.from(arrayBuffer));
       
-      await task.addFile(inputFilePath);
+      await task.addFile(new ILovePDFFile(inputFilePath));
     }
 
     // Pass required default params based on tool if necessary
