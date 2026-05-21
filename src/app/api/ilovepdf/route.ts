@@ -17,6 +17,13 @@ const toolMap: Record<string, string> = {
   "protect-pdf": "protect",
   "unlock-pdf": "unlock",
   "ocr": "pdfocr",
+  "pdf-to-jpg": "pdfjpg",
+  "image-to-pdf": "imagepdf",
+  "page-numbers": "pagenumber",
+  "repair-pdf": "repair",
+  "pdf-to-pdfa": "pdfa",
+  "extract-pdf": "extract",
+  "html-to-pdf": "htmlpdf",
 };
 
 export async function POST(req: NextRequest) {

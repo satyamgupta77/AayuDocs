@@ -3,7 +3,7 @@ import {
   Image as ImageIcon, ScanText, QrCode, FileArchive, 
   Briefcase, Eraser, FileDown, RotateCw, Unlock, Shield,
   ImagePlay, Sparkles, Bot, FileSignature, BrainCircuit,
-  Presentation, Edit3
+  Presentation, Edit3, Globe
 } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -112,6 +112,60 @@ export const toolsConfig: ToolConfig[] = [
     description: "Remove PDF password security, giving you the freedom to use your PDFs as you want.",
     icon: Unlock,
     color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    category: "PDF",
+  },
+  {
+    id: "pdf-to-jpg",
+    slug: "pdf-to-jpg",
+    title: "PDF to JPG",
+    description: "Convert each PDF page into a JPG or extract all images contained in a PDF.",
+    icon: ImageIcon,
+    color: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
+    category: "PDF",
+  },
+  {
+    id: "page-numbers",
+    slug: "page-numbers",
+    title: "Page Numbers",
+    description: "Add page numbers into PDFs with ease. Choose your positions, dimensions, typography.",
+    icon: FileText,
+    color: "bg-stone-100 text-stone-600 dark:bg-stone-900/30 dark:text-stone-400",
+    category: "PDF",
+  },
+  {
+    id: "repair-pdf",
+    slug: "repair-pdf",
+    title: "Repair PDF",
+    description: "Repair a damaged PDF and recover data from corrupt PDF. Fix PDF files with our Repair tool.",
+    icon: Shield,
+    color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    category: "PDF",
+  },
+  {
+    id: "pdf-to-pdfa",
+    slug: "pdf-to-pdfa",
+    title: "PDF to PDF/A",
+    description: "Convert PDF documents to PDF/A for archiving and long-term preservation.",
+    icon: FileArchive,
+    color: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
+    category: "PDF",
+  },
+  {
+    id: "extract-pdf",
+    slug: "extract-pdf",
+    title: "Extract PDF",
+    description: "Extract text and images from your PDF.",
+    icon: SplitSquareHorizontal,
+    color: "bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400",
+    category: "PDF",
+  },
+  {
+    id: "html-to-pdf",
+    slug: "html-to-pdf",
+    title: "HTML to PDF",
+    description: "Convert HTML files or Web pages to PDF documents.",
+    icon: Globe,
+    color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
     category: "PDF",
   },
   {

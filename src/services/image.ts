@@ -235,40 +235,23 @@ const convertHeic = async (file: File): Promise<string> => {
 };
 
 const imageToPdf = async (files: File[]): Promise<string> => {
-  const { jsPDF } = await import('jspdf');
-  // jspdf creates a new PDF document
-  const pdf = new jsPDF();
-  
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    if (i > 0) pdf.addPage();
-    
-    const imgData = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-    
-    // Fit image to PDF A4 page
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    // Create an image to get true dimensions
-    const img = new Image();
-    img.src = imgData;
-    await new Promise((resolve) => { img.onload = resolve; });
-    
-    const ratio = Math.min(pdfWidth / img.width, pdfHeight / img.height);
-    const width = img.width * ratio;
-    const height = img.height * ratio;
-    const x = (pdfWidth - width) / 2;
-    const y = (pdfHeight - height) / 2;
-    
-    pdf.addImage(imgData, 'JPEG', x, y, width, height);
+  const formData = new FormData();
+  formData.append("toolSlug", "image-to-pdf");
+  for (const file of files) {
+    formData.append("files", file);
   }
-  
-  const blob = pdf.output('blob');
+
+  const response = await fetch("/api/ilovepdf", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: "Unknown API error" }));
+    throw new Error(err.error || "iLovePDF API failed for image-to-pdf");
+  }
+
+  const blob = await response.blob();
   return URL.createObjectURL(blob);
 };
 
