@@ -15,6 +15,7 @@
     "@base-ui/react": "^1.4.1",
     "@clerk/nextjs": "^7.3.3",
     "@hookform/resolvers": "^5.2.2",
+    "@ilovepdf/ilovepdf-nodejs": "^0.3.1",
     "@imgly/background-removal": "^1.7.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",

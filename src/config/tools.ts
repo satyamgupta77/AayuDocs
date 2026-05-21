@@ -29,15 +29,7 @@ export const toolsConfig: ToolConfig[] = [
     color: "bg-orange-100 text-orange-605 dark:bg-orange-900/30 dark:text-orange-400",
     category: "PDF",
   },
-  {
-    id: "pdf-to-ppt",
-    slug: "pdf-to-ppt",
-    title: "PDF to PPT",
-    description: "Convert PDF documents into editable PowerPoint presentation slides, absolutely free.",
-    icon: Presentation,
-    color: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
-    category: "PDF",
-  },
+
   {
     id: "pdf-editor",
     slug: "pdf-editor",
@@ -67,15 +59,7 @@ export const toolsConfig: ToolConfig[] = [
     color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
     category: "PDF",
   },
-  {
-    id: "pdf-to-word",
-    slug: "pdf-to-word",
-    title: "PDF to Word",
-    description: "Easily convert your PDF files into easy to edit DOC and DOCX documents.",
-    icon: FileImage,
-    color: "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
-    category: "PDF",
-  },
+
   {
     id: "merge-pdf",
     slug: "merge-pdf",

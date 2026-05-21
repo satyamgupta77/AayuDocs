@@ -40,7 +40,6 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-6">Popular Tools</h4>
             <ul className="space-y-4">
               <li><Link href="/tools/word-to-pdf" className="hover:text-violet-400 transition-colors">Word to PDF</Link></li>
-              <li><Link href="/tools/pdf-to-word" className="hover:text-violet-400 transition-colors">PDF to Word</Link></li>
               <li><Link href="/tools/merge-pdf" className="hover:text-violet-400 transition-colors">Merge PDF</Link></li>
               <li><Link href="/tools/split-pdf" className="hover:text-violet-400 transition-colors">Split PDF</Link></li>
               <li><Link href="/tools/compress-pdf" className="hover:text-violet-400 transition-colors">Compress PDF</Link></li>
