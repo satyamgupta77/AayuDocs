@@ -58,7 +58,7 @@ const loadScript = (src: string): Promise<void> => {
   });
 };
 
-const callCloudConvert = async (file: File, fromFormat: string, toFormat: string): Promise<string> => {
+const convertWithLibreOffice = async (file: File, fromFormat: string, toFormat: string): Promise<string> => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("fromFormat", fromFormat);
@@ -74,122 +74,26 @@ const callCloudConvert = async (file: File, fromFormat: string, toFormat: string
     throw new Error(err.error || "Conversion API failed");
   }
 
-  const data = await response.json();
-  const fileRes = await fetch(data.url);
-  const blob = await fileRes.blob();
+  const blob = await response.blob();
   return URL.createObjectURL(blob);
 };
 
 const wordToPdf = async (file: File): Promise<string> => {
-  try {
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'docx';
-    return await callCloudConvert(file, ext, 'pdf');
-  } catch (error: any) {
-    console.warn("CloudConvert API failed, using fallback:", error.message);
-    return await wordToPdfFallback(file);
-  }
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'docx';
+  return await convertWithLibreOffice(file, ext, 'pdf');
 };
 
 const pdfToWord = async (file: File): Promise<string> => {
-  try {
-    return await callCloudConvert(file, 'pdf', 'docx');
-  } catch (error: any) {
-    console.warn("CloudConvert API failed, using fallback:", error.message);
-    return await pdfToWordFallback(file);
-  }
+  return await convertWithLibreOffice(file, 'pdf', 'docx');
 };
 
 const pptToPdf = async (file: File): Promise<string> => {
-  try {
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'pptx';
-    return await callCloudConvert(file, ext, 'pdf');
-  } catch (error: any) {
-    console.warn("CloudConvert API failed, using fallback:", error.message);
-    return await pptToPdfFallback(file);
-  }
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'pptx';
+  return await convertWithLibreOffice(file, ext, 'pdf');
 };
 
 const pdfToPpt = async (file: File): Promise<string> => {
-  try {
-    return await callCloudConvert(file, 'pdf', 'pptx');
-  } catch (error: any) {
-    console.warn("CloudConvert API failed, using fallback:", error.message);
-    return await pdfToPptFallback(file);
-  }
-};
-
-const wordToPdfFallback = async (file: File): Promise<string> => {
-  let htmlContent = "";
-
-  if (file.name.endsWith('.docx')) {
-    try {
-      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js");
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await (window as any).mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-      htmlContent = result.value;
-    } catch (err) {
-      console.error("Mammoth DOCX conversion failed, falling back to text read:", err);
-      const text = await file.text();
-      htmlContent = `<div style="white-space: pre-wrap;">${text}</div>`;
-    }
-  } else {
-    const text = await file.text();
-    htmlContent = `<div style="white-space: pre-wrap;">${text}</div>`;
-  }
-
-  const element = document.createElement('div');
-  element.innerHTML = `
-    <div style="padding: 40px; font-family: sans-serif; background-color: #ffffff; color: #000000; min-height: 297mm; box-sizing: border-box;">
-      <div style="margin-top: 10px; line-height: 1.6;">
-        ${htmlContent}
-      </div>
-    </div>
-  `;
-  
-  const html2pdf = (await import('html2pdf.js')).default;
-  const opt = {
-    margin: [15, 15, 15, 15] as [number, number, number, number],
-    filename: file.name.replace(/\.[^/.]+$/, "") + ".pdf",
-    image: { type: 'jpeg' as const, quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-    jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
-  };
-
-  const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
-  return URL.createObjectURL(pdfBlob);
-};
-
-const pdfToWordFallback = async (file: File): Promise<string> => {
-  // Demo: Extract text and wrap in HTML for Word
-  const arrayBuffer = await file.arrayBuffer();
-  const pdfjs = await import('pdfjs-dist');
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-  
-  const loadingTask = pdfjs.getDocument(arrayBuffer);
-  const pdf = await loadingTask.promise;
-  let fullText = "";
-  
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const strings = content.items.map((item: any) => item.str);
-    fullText += strings.join(' ') + "\n\n";
-  }
-
-  const htmlContent = `
-    <html>
-      <body>
-        <h1 style="color: #7c3aed;">AayuDocs Extracted Content</h1>
-        <p><b>Source:</b> ${file.name}</p>
-        <hr/>
-        <div style="white-space: pre-wrap;">${fullText}</div>
-      </body>
-    </html>
-  `;
-  
-  const asBlob = (await import('html-docx-js-typescript')).asBlob;
-  const wordBlob = await asBlob(htmlContent);
-  return URL.createObjectURL(wordBlob as Blob);
+  return await convertWithLibreOffice(file, 'pdf', 'pptx');
 };
 
 const mergePdfs = async (files: File[]): Promise<string> => {
@@ -270,115 +174,7 @@ const watermarkPdf = async (file: File): Promise<string> => {
   return URL.createObjectURL(blob);
 };
 
-const pptToPdfFallback = async (file: File): Promise<string> => {
-  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
-  const JSZip = (window as any).JSZip;
-  const zip = new JSZip();
-  const content = await file.arrayBuffer();
-  const loadedZip = await zip.loadAsync(content);
-  
-  // Find slide files
-  const slideFiles = Object.keys(loadedZip.files).filter(name => 
-    name.startsWith("ppt/slides/slide") && name.endsWith(".xml")
-  ).sort((a, b) => {
-    const numA = parseInt(a.replace(/[^\d]/g, ""), 10);
-    const numB = parseInt(b.replace(/[^\d]/g, ""), 10);
-    return numA - numB;
-  });
-  
-  const slidesHtml: string[] = [];
-  
-  if (slideFiles.length === 0) {
-    slidesHtml.push(`
-      <div style="padding: 40px; text-align: center; font-family: sans-serif;">
-        <h2>Presentation Document</h2>
-        <p>Source file: ${file.name}</p>
-      </div>
-    `);
-  } else {
-    for (const slideFile of slideFiles) {
-      const xmlText = await loadedZip.files[slideFile].async("text");
-      // Extract text in <a:t>...</a:t>
-      const textMatches = xmlText.match(/<a:t>([^<]*)<\/a:t>/g) || [];
-      const textRuns = textMatches.map((m: string) => m.replace(/<\/?a:t>/g, ""));
-      
-      const title = textRuns[0] || "Slide";
-      const bodyPoints = textRuns.slice(1).filter((t: string) => t.trim().length > 0);
-      
-      slidesHtml.push(`
-        <div style="width: 297mm; height: 210mm; padding: 40px; box-sizing: border-box; background-color: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; position: relative;">
-          <div>
-            <h1 style="color: #38bdf8; font-size: 32px; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px;">${title}</h1>
-            <ul style="font-size: 18px; line-height: 1.8; color: #cbd5e1; padding-left: 20px;">
-              ${bodyPoints.map((pt: string) => `<li style="margin-bottom: 10px;">${pt}</li>`).join("")}
-            </ul>
-          </div>
-          <div style="position: absolute; bottom: 20px; right: 40px; font-size: 12px; color: #64748b;">
-            AayuDocs Presentation Converter | Page ${slidesHtml.length + 1}
-          </div>
-        </div>
-      `);
-    }
-  }
-  
-  const element = document.createElement("div");
-  element.innerHTML = slidesHtml.join("");
-  
-  const html2pdf = (await import('html2pdf.js')).default;
-  const opt = {
-    margin: 0,
-    filename: file.name.replace(/\\.[^/.]+$/, "") + ".pdf",
-    image: { type: 'jpeg' as const, quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'landscape' as const }
-  };
-  
-  const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
-  return URL.createObjectURL(pdfBlob);
-};
-
-const pdfToPptFallback = async (file: File): Promise<string> => {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdfjs = await import('pdfjs-dist');
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-  
-  const loadingTask = pdfjs.getDocument(arrayBuffer);
-  const pdf = await loadingTask.promise;
-  
-  await loadScript("https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js");
-  const PptxGenJS = (window as any).PptxGenJS;
-  const pptx = new PptxGenJS();
-  
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const strings = content.items.map((item: any) => item.str);
-    
-    const slide = pptx.addSlide();
-    slide.background = { color: "0f172a" };
-    
-    slide.addText(`AayuDocs Converted Slide ${i}`, { 
-      x: 0.5, y: 0.5, w: 9, h: 0.8, 
-      fontSize: 24, color: "38bdf8", bold: true 
-    });
-    
-    const fullText = strings.join(" ");
-    const bulletPoints = fullText.split(". ").filter((p: string) => p.trim().length > 0).map((p: string) => p.trim());
-    
-    if (bulletPoints.length > 0) {
-      slide.addText(
-        bulletPoints.map((p: string) => ({ text: p, options: { bullet: true } })), 
-        { 
-          x: 0.5, y: 1.5, w: 9, h: 5.5, 
-          fontSize: 14, color: "cbd5e1", lineSpacing: 24
-        }
-      );
-    }
-  }
-  
-  const pptxBlob = await pptx.write("blob");
-  return URL.createObjectURL(pptxBlob as Blob);
-};
+// Fallbacks removed since LibreOffice headless is natively available and reliable.
 
 const mockProcess = async (file: File, toolSlug: string): Promise<string> => {
   return new Promise((resolve) => {

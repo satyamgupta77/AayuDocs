@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import CloudConvert from "cloudconvert";
+import { execFile } from "child_process";
+import fs from "fs/promises";
+import path from "path";
+import os from "os";
+import util from "util";
+import crypto from "crypto";
+
+const execFileAsync = util.promisify(execFile);
+
+// LibreOffice path (assumes 'soffice' is in PATH)
+const SOFFICE_PATH = "soffice";
 
 export async function POST(req: NextRequest) {
+  let tempDir = "";
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -15,71 +26,73 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = process.env.CLOUDCONVERT_API_KEY;
+    // Create a temporary directory for this conversion
+    const reqId = crypto.randomUUID();
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), `aayudocs-convert-${reqId}`));
 
-    if (!apiKey) {
-      // Return a 501 Not Implemented or 400 with instructions if no API key
+    // Save uploaded file to temp directory
+    const inputFilePath = path.join(tempDir, `input.${fromFormat}`);
+    const arrayBuffer = await file.arrayBuffer();
+    await fs.writeFile(inputFilePath, Buffer.from(arrayBuffer));
+
+    // Execute LibreOffice headless conversion
+    // Command: soffice --headless --convert-to targetFormat inputFilePath --outdir tempDir
+    try {
+      await execFileAsync(SOFFICE_PATH, [
+        "--headless",
+        "--invisible",
+        "--nodefault",
+        "--nofirststartwizard",
+        "--nologo",
+        "--norestore",
+        "--convert-to",
+        toFormat,
+        inputFilePath,
+        "--outdir",
+        tempDir,
+      ]);
+    } catch (execError: any) {
+      console.error("LibreOffice execution error:", execError);
       return NextResponse.json(
-        { 
-          error: "CloudConvert API Key is missing. Please sign up at cloudconvert.com, get an API key, and add it to your .env file as CLOUDCONVERT_API_KEY." 
-        },
-        { status: 501 }
+        { error: "Failed to convert document. Ensure LibreOffice is installed on the server and added to PATH." },
+        { status: 500 }
       );
     }
 
-    const cloudConvert = new CloudConvert(apiKey);
-
-    // Create a job
-    let job = await cloudConvert.jobs.create({
-      tasks: {
-        "import-my-file": {
-          operation: "import/upload",
-        },
-        "convert-my-file": {
-          operation: "convert",
-          input: "import-my-file",
-          output_format: toFormat,
-          input_format: fromFormat,
-        },
-        "export-my-file": {
-          operation: "export/url",
-          input: "convert-my-file",
-        },
-      },
-    });
-
-    const uploadTask = job.tasks.filter((task) => task.name === "import-my-file")[0];
-
-    // Convert Web File to Buffer for CloudConvert SDK
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Upload the file
-    await cloudConvert.tasks.upload(uploadTask, buffer, file.name);
-
-    // Wait for the job to complete
-    job = await cloudConvert.jobs.wait(job.id);
-
-    // Fetch the export task result
-    const exportTask = job.tasks.filter((task) => task.name === "export-my-file")[0];
+    // Read the converted file
+    const convertedFileName = `input.${toFormat}`;
+    const convertedFilePath = path.join(tempDir, convertedFileName);
+    const convertedFileBuffer = await fs.readFile(convertedFilePath);
     
-    if (exportTask.status === "error") {
-      throw new Error(exportTask.message || "Conversion failed");
-    }
+    // Clean up temp directory
+    await fs.rm(tempDir, { recursive: true, force: true });
+
+    // Return the file as a response
+    const headers = new Headers();
+    const cleanFilename = file.name.replace(/\.[^/.]+$/, "");
+    headers.set("Content-Disposition", `attachment; filename="${cleanFilename}.${toFormat}"`);
     
-    if (!exportTask.result || !exportTask.result.files || exportTask.result.files.length === 0) {
-      throw new Error("No file was returned from CloudConvert");
-    }
+    let mimeType = "application/octet-stream";
+    if (toFormat === "pdf") mimeType = "application/pdf";
+    if (toFormat === "docx") mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    if (toFormat === "pptx") mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    headers.set("Content-Type", mimeType);
 
-    const fileResult = exportTask.result.files[0];
-
-    return NextResponse.json({
-      url: fileResult.url,
-      filename: fileResult.filename,
+    return new NextResponse(convertedFileBuffer, {
+      status: 200,
+      headers,
     });
 
   } catch (error: any) {
     console.error("Conversion error:", error);
+    // Attempt cleanup on failure
+    if (tempDir) {
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true });
+      } catch (cleanupError) {
+        console.error("Cleanup error:", cleanupError);
+      }
+    }
     return NextResponse.json(
       { error: error.message || "An unexpected error occurred during conversion" },
       { status: 500 }
