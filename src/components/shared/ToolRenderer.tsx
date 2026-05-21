@@ -530,7 +530,7 @@ export function ToolRenderer({ toolSlug, isPro = false }: ToolRendererProps) {
                   href={processedUrl} 
                   download={`processed_${activeFiles[0]?.name?.split('.')[0] || 'file'}${
                     (tool.slug === 'ocr' || tool.isAi) ? '.txt' :
-                    tool.slug === 'pdf-to-word' ? '.doc' :
+                    tool.slug === 'pdf-to-word' ? '.docx' :
                     tool.slug.includes('-to-jpg') || tool.slug === 'heic-converter' ? '.jpg' :
                     tool.slug.includes('-to-png') ? '.png' :
                     tool.slug.includes('webp-converter') ? '.webp' :
