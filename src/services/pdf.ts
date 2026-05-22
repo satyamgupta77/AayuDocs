@@ -1,14 +1,36 @@
 export const processPdfTool = async (files: File[], toolSlug: string): Promise<string> => {
   if (files.length === 0) throw new Error("No files provided");
 
-  // These tools are not supported by iLovePDF API Developer tier directly as "pdf-to-word" / "pdf-to-ppt"
-  // If they somehow are passed, we mock them
-  if (toolSlug === 'pdf-to-word' || toolSlug === 'pdf-to-ppt') {
-    return mockProcess(files[0], toolSlug);
+  // These tools require precise formatting and are handled by CloudConvert
+  const cloudConvertTools = ['pdf-to-word', 'pdf-to-ppt', 'word-to-pdf', 'ppt-to-pdf'];
+
+  if (cloudConvertTools.includes(toolSlug)) {
+    return await convertWithCloudConvert(files, toolSlug);
   }
 
-  // Convert via iLovePDF API
+  // Convert via iLovePDF API for all other native PDF tools
   return await convertWithILovePdf(files, toolSlug);
+};
+
+const convertWithCloudConvert = async (files: File[], toolSlug: string): Promise<string> => {
+  const formData = new FormData();
+  formData.append("toolSlug", toolSlug);
+  for (const file of files) {
+    formData.append("files", file);
+  }
+
+  const response = await fetch("/api/cloudconvert", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: "Unknown API error" }));
+    throw new Error(err.error || "CloudConvert API failed");
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 };
 
 const convertWithILovePdf = async (files: File[], toolSlug: string): Promise<string> => {
@@ -30,14 +52,5 @@ const convertWithILovePdf = async (files: File[], toolSlug: string): Promise<str
 
   const blob = await response.blob();
   return URL.createObjectURL(blob);
-};
-
-const mockProcess = async (file: File, toolSlug: string): Promise<string> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const blob = new Blob([`Mock processed content for ${toolSlug}: ${file?.name}\n\nNote: iLovePDF Developer API does not natively support extracting PDF to Office formats.`], { type: "text/plain" });
-      resolve(URL.createObjectURL(blob));
-    }, 1500);
-  });
 };
 

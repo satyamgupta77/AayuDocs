@@ -85,7 +85,8 @@ export async function POST(req: NextRequest) {
     // Pass required default params based on tool if necessary
     const processParams: any = {};
     if (iloveTool === 'watermark') {
-      processParams.text = "AayuDocs Watermark";
+      const watermarkText = formData.get("watermarkText") as string;
+      processParams.text = watermarkText || "Draft"; // Fallback to Draft if empty
     } else if (iloveTool === 'rotate') {
       processParams.rotate = 90; // Default rotate
     }
